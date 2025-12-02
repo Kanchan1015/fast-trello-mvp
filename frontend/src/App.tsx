@@ -1,14 +1,17 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import { Route, Routes } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Board from "./pages/Board";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
       <h1 className="text-3xl font-bold text-red-500">Tailwind works!</h1>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/board" element={<Board />} />
+      </Routes>
     </>
   );
 }
