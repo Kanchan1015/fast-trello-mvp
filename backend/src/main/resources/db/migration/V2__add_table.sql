@@ -1,0 +1,6 @@
+CREATE TABLE stuffs (
+  id UUID PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
