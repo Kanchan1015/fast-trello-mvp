@@ -16,7 +16,9 @@ public class JwtService {
 
     public JwtService(JwtProperties props) {
         this.props = props;
-        // create signing key from secret (HMAC-SHA)
+        if (props.getSecret() == null || props.getSecret().length() < 32) {
+            throw new IllegalStateException("JWT secret must be set and at least 32 bytes for HS256");
+        }
         this.key = Keys.hmacShaKeyFor(props.getSecret().getBytes());
     }
 
@@ -31,10 +33,15 @@ public class JwtService {
                 .compact();
     }
 
-    // parse and validate token, return subject (userId)
+    /**
+     * Validate token and return subject (user id).
+     * Uses a small allowed clock skew to avoid immediate expiry due to clock differences.
+     */
     public String validateAndGetSubject(String token) throws JwtException {
         Jws<Claims> jws = Jwts.parserBuilder()
                 .setSigningKey(key)
+                // allow small clock skew (in seconds) to account for minor clock drift
+                .setAllowedClockSkewSeconds(60) // 60s leeway
                 .build()
                 .parseClaimsJws(token);
         return jws.getBody().getSubject();

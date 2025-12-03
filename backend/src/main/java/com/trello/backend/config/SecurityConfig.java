@@ -1,5 +1,7 @@
 package com.trello.backend.config;
 
+import com.trello.backend.auth.jwt.JwtAuthenticationFilter;
+import com.trello.backend.auth.jwt.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -11,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -21,34 +24,46 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtService jwtService;
+
+    // JwtService is injected so we can register the JwtAuthenticationFilter
+    public SecurityConfig(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
+
         http
-            // Use lambda style for csrf()
-            .csrf(csrf -> csrf.disable()) // fine for API + JWT flow; revisit for browser forms
-            
-            // Use lambda style for cors() or keep as is (both work)
+            // disable CSRF for a stateless API using JWTs
+            .csrf(csrf -> csrf.disable())
+
+            // enable CORS using our corsConfigurationSource bean
             .cors(Customizer.withDefaults())
-            
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // we'll use JWT later
-            
-            // Replace antMatchers() with requestMatchers() for Spring Security 6+
+
+            // stateless session management (we use JWT)
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            // authorize requests: open health and auth endpoints, protect everything else
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .anyRequest().authenticated()
             );
 
-        // no httpBasic() nor formLogin() here — we'll add JWT later; keep default filters minimal
+        // Register JWT filter before UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
-    // Expose AuthenticationManager to be used by AuthService later
+    // Expose AuthenticationManager for later use (e.g., in AuthService)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // Password encoder to hash passwords (use this when creating users)
+    // Password encoder to hash passwords (BCrypt)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
