@@ -36,3 +36,6 @@ build/
 ### local secrets
 .env
 .env.backend
+
+### personal files
+otherstuffs.md
