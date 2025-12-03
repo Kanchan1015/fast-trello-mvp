@@ -1,7 +1,7 @@
-# Fast Trello MVP
+# 🚀 Fast Trello MVP
 
-A lightweight Trello-style board app built with **Spring Boot**, **React (Vite + TypeScript)**, **Neon PostgreSQL**, **Flyway**, and soon **JWT Authentication**.
-Designed as an **interview-ready MVP** with a clean architecture and minimal, well-structured features.
+A lightweight Trello-style board app built with **Spring Boot**, **React (Vite + TypeScript)**, **Neon PostgreSQL**, **Flyway**, and now **JWT Authentication**.
+Designed as an **interview-ready MVP** with clean architecture and minimal, well-structured features.
 
 ---
 
@@ -23,14 +23,16 @@ Designed as an **interview-ready MVP** with a clean architecture and minimal, we
 
 ---
 
-# Current Progress
+# 📦 Current Progress
 
-## Completed
+## ✅ Completed
 
 ### **1. Workspace Setup**
 
 - Repo initialized with `frontend/` and `backend/`
 - Tools verified (Node, Java, Maven)
+
+---
 
 ### **2. Frontend Setup**
 
@@ -42,40 +44,51 @@ Designed as an **interview-ready MVP** with a clean architecture and minimal, we
   - Axios
   - Tailwind (optional)
 
-- Added basic routes + pages (Login, Dashboard, Board)
-- Folder structure established
+- Added routes + basic pages (Login, Dashboard, Board)
+- Clean folder structure created
+
+---
 
 ### **3. Backend Setup**
 
 - Spring Boot generated with:
 
-  - Web, Security, JPA, Validation
+  - Web
+  - Security
+  - JPA
+  - Validation
   - PostgreSQL Driver
   - Flyway
 
+---
+
 ### **4. Database Setup**
 
-- Neon PostgreSQL connected successfully
-- `flyway-core` configured
-- Initial migration added:
+- Connected backend to Neon PostgreSQL
+- Added Flyway migration `V1__init.sql` defining:
 
   - `users`
   - `boards`
   - `lists`
   - `cards`
 
-- Flyway migration validated in Neon dashboard
+- Migrations applied successfully
+
+---
 
 ### **5. Spring Security Base Setup**
 
 - Security **enabled**, not disabled
-- Stateless mode for future JWT
-- Public routes:
+- Stateless session mode configured
+- Public endpoints:
 
   - `/health`
   - `/api/auth/**`
 
-- Added password encoder + CORS config
+- CORS enabled for frontend (`http://localhost:5173`)
+- Added `BCryptPasswordEncoder`
+
+---
 
 ### **6. Health Endpoint**
 
@@ -87,12 +100,92 @@ Designed as an **interview-ready MVP** with a clean architecture and minimal, we
 
 ---
 
-# Architecture Overview
+### **7. User Domain & Auth Service (Completed)**
+
+- Added `User` JPA entity mapping to `users` table
+- Added `UserRepository` with `findByEmail` and `existsByEmail`
+- Added DTOs:
+
+  - `RegisterRequest`
+  - `LoginRequest`
+  - `UserDto`
+  - `AuthResponse`
+
+- Added `AuthService`:
+
+  - Handles register (hash password, save user, create JWT)
+  - Handles login (verify bcrypt hash, create JWT)
+  - Provides `getCurrentUser()` through SecurityContext
+
+- Added custom exceptions for clean error handling
+
+---
+
+### **8. JWT Generation & Validation (Completed)**
+
+- Implemented `JwtService`:
+
+  - Creates tokens (HS256)
+  - Validates tokens with small clock skew
+  - Stores secret & expiry in environment variables
+
+- Added `JwtAuthenticationFilter`:
+
+  - Reads `Authorization: Bearer <token>`
+  - Validates JWT and populates `SecurityContext`
+
+- Updated `SecurityConfig`:
+
+  - Adds JWT filter before default auth filter
+  - Ensures `/api/auth/**` and `/health` are open
+  - All other endpoints require a valid token
+  - CORS allowed for frontend
+
+---
+
+### **9. Authentication Controller (Completed)**
+
+Added `/api/auth` controller with endpoints:
+
+| Method | Endpoint             | Description                                   |
+| ------ | -------------------- | --------------------------------------------- |
+| POST   | `/api/auth/register` | Registers user, returns `{ token, user }`     |
+| POST   | `/api/auth/login`    | Authenticates user, returns `{ token, user }` |
+| GET    | `/api/auth/me`       | Returns current user (protected)              |
+
+Additional:
+
+- Added request validation (`@Valid`)
+- Added `GlobalExceptionHandler` for clean error responses:
+
+  - Duplicate email → 400
+  - Invalid credentials → 401
+  - Validation errors → 400
+
+---
+
+### **10. Frontend Integration Notes (Completed)**
+
+- Store token in `localStorage` or `sessionStorage` (MVP)
+- Axios interceptor should attach `Authorization: Bearer <token>`
+- On app load:
+
+  - If token exists → call `/api/auth/me`
+
+- Protected routes:
+
+  - Redirect to `/login` when no token or user invalid
+
+- Handle token expiration and auth errors elegantly
+
+---
+
+# 🧱 Architecture Overview
 
 ```
 fast-trello-mvp/
 │
-├── frontend/                       # Vite + React + TS
+├── frontend/
 │   ├── src/
 │   │   ├── pages/
 │   │   ├── components/
@@ -101,30 +194,28 @@ fast-trello-mvp/
 │   │   └── main.tsx
 │   └── package.json
 │
-└── backend/                        # Spring Boot
+└── backend/
     ├── src/main/java/com/trello/backend/
-    │   ├── config/                 # SecurityConfig, CORS, JWT filters later
-    │   ├── common/                 # HealthController, shared utils
-    │   ├── auth/                   # (upcoming) User, AuthController, JWT
+    │   ├── config/                 # SecurityConfig, CORS, JWT filter
+    │   ├── common/                 # HealthController
+    │   ├── auth/                   # User, AuthService, AuthController, DTOs, JWT
     │   ├── board/                  # (upcoming) boards/lists/cards logic
     │   └── BackendApplication.java
     │
     ├── src/main/resources/
     │   ├── application.properties
-    │   └── db/migration/           # Flyway V1__init.sql
+    │   └── db/migration/           # V1__init.sql
     │
     └── pom.xml
 ```
 
 ---
 
-# Running the Project
+# ▶️ Running the Project
 
 ## Backend
 
-### **1. Load environment variables**
-
-(Your DB credentials should be stored safely in `.env.backend` and added to `.gitignore`)
+### **1. Load env vars**
 
 ```bash
 set -o allexport; source .env.backend; set +o allexport
@@ -137,7 +228,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend runs at: **[http://localhost:8080](http://localhost:8080)**
+Backend: **[http://localhost:8080](http://localhost:8080)**
 
 ---
 
@@ -149,52 +240,53 @@ npm install
 npm run dev
 ```
 
-Frontend runs at: **[http://localhost:5173](http://localhost:5173)**
+Frontend: **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
-# 🗺️ Roadmap (Next Steps)
+# 🗺️ Updated Roadmap
 
-### 🔜 **7. Authentication Module (In Progress Next)**
+### ✅ **Day 1 & Day 2: Backend Auth + Security Completed**
 
-- User entity (UUID-based)
-- BCrypt password hashing
-- Register endpoint (`POST /api/auth/register`)
-- Login endpoint (`POST /api/auth/login`)
-- JWT generation & validation
-- Security filter chain update for JWT
+### 🔜 **Next Major Steps (Day 3 onward)**
 
-### 🔜 **8. Boards / Lists / Cards**
+### **1. Board API (Create, List, Delete)**
 
-- CRUD APIs for boards, lists, cards
-- Position-based ordering
-- React Query integration on frontend
+- User-owned boards
+- Basic CRUD
+- `/api/boards/**` (protected)
 
-### 🔜 **9. Drag & Drop (Frontend)**
+### **2. List & Card APIs**
 
-- Implement DnD via `@dnd-kit`
-- Apply optimistic updates
-- Persist card/list order
+- Add list to board
+- Add card to list
+- Reorder lists & cards (position index)
 
-### 🔜 **10. Realtime Sync**
+### **3. Drag & Drop (Frontend)**
 
-- WebSocket or Server-Sent Events (SSE)
-- Multi-user live board updates
+- Use `@dnd-kit`
+- Optimistic updates
+- Real backend persistence
 
-### 🔜 **11. Deployment**
+### **4. Realtime Sync**
+
+- WebSocket or SSE
+- Live card movement updates
+
+### **5. Deployment**
 
 - Frontend → Vercel / Netlify
 - Backend → Railway / Render
-- DB → Neon (already done)
+- DB → Neon
 
 ---
 
-# Contributing
+# 🤝 Contributing
 
-This project is built for learning — clean code, readable commits, small features, and clear architecture are encouraged.
+Clean code, readable commits, and modular architecture keep this project learning-focused and easy to extend.
 
 ---
 
-# License
+# 📄 License
 
 MIT License.
