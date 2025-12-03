@@ -25,7 +25,7 @@ Designed as an **interview-ready MVP** with clean architecture and minimal, well
 
 # 📦 Current Progress
 
-## ✅ Completed
+## Completed
 
 ### **1. Workspace Setup**
 
@@ -244,11 +244,11 @@ Frontend: **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
-# 🗺️ Updated Roadmap
+# Updated Roadmap
 
-### ✅ **Day 1 & Day 2: Backend Auth + Security Completed**
+### **Backend Auth + Security Completed**
 
-### 🔜 **Next Major Steps (Day 3 onward)**
+### **Next Major Steps (Day 3 onward)**
 
 ### **1. Board API (Create, List, Delete)**
 
@@ -281,7 +281,7 @@ Frontend: **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
-# 🤝 Contributing
+# Contributing
 
 Clean code, readable commits, and modular architecture keep this project learning-focused and easy to extend.
 
