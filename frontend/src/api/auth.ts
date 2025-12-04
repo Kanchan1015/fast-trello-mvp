@@ -15,6 +15,20 @@ export function registerApi(payload: RegisterPayload) {
     .then((r) => r.data);
 }
 
-export function loginApi(payload: LoginPayload) {
-  return api.post<AuthResponse>("/api/auth/login", payload).then((r) => r.data);
+// export function loginApi(payload: LoginPayload) {
+//   return api.post<AuthResponse>("/api/auth/login", payload).then((r) => r.data);
+// }
+
+export function loginApi(payload: { email: string; password: string }) {
+  console.log("loginApi called", payload);
+  return api
+    .post("/api/auth/login", payload)
+    .then((r) => {
+      console.log("loginApi response", r);
+      return r.data;
+    })
+    .catch((err) => {
+      console.error("loginApi error", err);
+      throw err;
+    });
 }

@@ -5,6 +5,7 @@ import { loginApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
 import { setToken } from "../utils/token";
+import { useAuth } from "../context/AuthContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -16,10 +17,40 @@ const Login: React.FC = () => {
 
   const navigate = useNavigate();
   const emailRef = useRef<HTMLInputElement | null>(null);
+  const { signIn } = useAuth();
 
   useEffect(() => {
     emailRef.current?.focus();
   }, []);
+
+  // const mutation = useMutation<
+  //   AuthResponse,
+  //   any,
+  //   { email: string; password: string }
+  // >({
+  //   mutationFn: (payload) => loginApi(payload),
+  //   onSuccess: (data) => {
+  //     setToken(data.token);
+
+  //     setFieldErrors({});
+  //     setServerError(null);
+  //     navigate("/dashboard");
+  //   },
+  //   onError: (err: any) => {
+  //     const resp = err?.response?.data;
+  //     if (!resp) {
+  //       setServerError("Login failed. Try again.");
+  //       return;
+  //     }
+  //     // validation errors shape from backend: { error: "validation_failed", details: {field: msg} }
+  //     if (resp.error === "validation_failed" && resp.details) {
+  //       setFieldErrors(resp.details);
+  //       setServerError(null);
+  //       return;
+  //     }
+  //     setServerError(resp.message ?? resp.error ?? "Login failed");
+  //   },
+  // });
 
   const mutation = useMutation<
     AuthResponse,
@@ -28,25 +59,17 @@ const Login: React.FC = () => {
   >({
     mutationFn: (payload) => loginApi(payload),
     onSuccess: (data) => {
+      console.log("LOGIN onSuccess", data);
+      // persist token for axios interceptor
       setToken(data.token);
-
-      setFieldErrors({});
-      setServerError(null);
+      // update app-level auth state immediately to avoid race
+      signIn(data.token, data.user);
+      // now navigate
       navigate("/dashboard");
     },
-    onError: (err: any) => {
-      const resp = err?.response?.data;
-      if (!resp) {
-        setServerError("Login failed. Try again.");
-        return;
-      }
-      // validation errors shape from backend: { error: "validation_failed", details: {field: msg} }
-      if (resp.error === "validation_failed" && resp.details) {
-        setFieldErrors(resp.details);
-        setServerError(null);
-        return;
-      }
-      setServerError(resp.message ?? resp.error ?? "Login failed");
+
+    onError: (err) => {
+      console.error("LOGIN onError", err);
     },
   });
 
@@ -63,10 +86,15 @@ const Login: React.FC = () => {
     return Object.keys(errs).length === 0;
   };
 
+  // const onSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setServerError(null);
+  //   if (!validate()) return;
+  //   mutation.mutate({ email, password });
+  // };
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setServerError(null);
-    if (!validate()) return;
+    console.log("LOGIN onSubmit called", { email, password });
     mutation.mutate({ email, password });
   };
 
