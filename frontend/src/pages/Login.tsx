@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { loginApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
+import { setToken } from "../utils/token";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -27,7 +28,8 @@ const Login: React.FC = () => {
   >({
     mutationFn: (payload) => loginApi(payload),
     onSuccess: (data) => {
-      localStorage.setItem("ft_token", data.token);
+      setToken(data.token);
+
       setFieldErrors({});
       setServerError(null);
       navigate("/dashboard");
