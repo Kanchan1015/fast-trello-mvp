@@ -5,17 +5,17 @@ import { loginApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
 import { setToken } from "../utils/token";
+import { useAuth } from "../context/AuthContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
-  // inline client-side and server-side field errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const emailRef = useRef<HTMLInputElement | null>(null);
+  const { signIn } = useAuth();
 
   useEffect(() => {
     emailRef.current?.focus();
@@ -28,8 +28,11 @@ const Login: React.FC = () => {
   >({
     mutationFn: (payload) => loginApi(payload),
     onSuccess: (data) => {
+      // persist token for axios interceptor
       setToken(data.token);
-
+      // update app-level auth state to avoid race with AuthProvider
+      signIn(data.token, data.user);
+      // clear UI errors and navigate
       setFieldErrors({});
       setServerError(null);
       navigate("/dashboard");
@@ -40,7 +43,7 @@ const Login: React.FC = () => {
         setServerError("Login failed. Try again.");
         return;
       }
-      // validation errors shape from backend: { error: "validation_failed", details: {field: msg} }
+      // backend validation shape
       if (resp.error === "validation_failed" && resp.details) {
         setFieldErrors(resp.details);
         setServerError(null);
@@ -50,7 +53,7 @@ const Login: React.FC = () => {
     },
   });
 
-  // v5 SAFE FLAGS
+  // v5-safe flags
   const isLoading = mutation.isPending;
   const isError = mutation.isError;
 
@@ -84,9 +87,6 @@ const Login: React.FC = () => {
               fieldErrors.email ? "border-red-500" : ""
             }`}
             placeholder="you@example.com"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSubmit(e as any);
-            }}
             autoComplete="email"
           />
           {fieldErrors.email && (
