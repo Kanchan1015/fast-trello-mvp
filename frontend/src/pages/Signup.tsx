@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { registerApi } from "../api/auth";
@@ -9,7 +9,16 @@ const Signup: React.FC = () => {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const navigate = useNavigate();
+  const nameRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
 
   const mutation = useMutation<
     AuthResponse,
@@ -19,58 +28,99 @@ const Signup: React.FC = () => {
     mutationFn: (payload) => registerApi(payload),
     onSuccess: (data) => {
       localStorage.setItem("ft_token", data.token);
+      setFieldErrors({});
+      setServerError(null);
       navigate("/dashboard");
+    },
+    onError: (err: any) => {
+      const resp = err?.response?.data;
+      if (!resp) {
+        setServerError("Signup failed. Try again.");
+        return;
+      }
+      if (resp.error === "validation_failed" && resp.details) {
+        setFieldErrors(resp.details);
+        setServerError(null);
+        return;
+      }
+      setServerError(resp.message ?? resp.error ?? "Signup failed");
     },
   });
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate({ name, email, password });
-  };
-
-  // v5-safe flags
+  // v5 SAFE FLAGS
   const isLoading = mutation.isPending;
   const isError = mutation.isError;
 
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!name || name.trim().length < 2) errs.name = "Enter your full name";
+    if (!email) errs.email = "Email is required";
+    else if (!/^\S+@\S+\.\S+$/.test(email)) errs.email = "Enter a valid email";
+    if (!password || password.length < 6)
+      errs.password = "Password must be at least 6 characters";
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setServerError(null);
+    if (!validate()) return;
+    mutation.mutate({ name, email, password });
+  };
+
   return (
     <AuthLayout title="Create account">
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>
           <label className="block text-sm font-medium">Full name</label>
           <input
+            ref={nameRef}
             type="text"
-            required
-            minLength={2}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full border rounded p-2"
+            className={`mt-1 block w-full border rounded p-2 ${
+              fieldErrors.name ? "border-red-500" : ""
+            }`}
             placeholder="Your name"
           />
+          {fieldErrors.name && (
+            <div className="text-xs text-red-600 mt-1">{fieldErrors.name}</div>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium">Email</label>
           <input
             type="email"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full border rounded p-2"
+            className={`mt-1 block w-full border rounded p-2 ${
+              fieldErrors.email ? "border-red-500" : ""
+            }`}
             placeholder="you@example.com"
           />
+          {fieldErrors.email && (
+            <div className="text-xs text-red-600 mt-1">{fieldErrors.email}</div>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium">Password</label>
           <input
             type="password"
-            required
-            minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full border rounded p-2"
+            className={`mt-1 block w-full border rounded p-2 ${
+              fieldErrors.password ? "border-red-500" : ""
+            }`}
             placeholder="At least 6 characters"
           />
+          {fieldErrors.password && (
+            <div className="text-xs text-red-600 mt-1">
+              {fieldErrors.password}
+            </div>
+          )}
         </div>
 
         <button
@@ -83,9 +133,10 @@ const Signup: React.FC = () => {
           {isLoading ? "Creating..." : "Create account"}
         </button>
 
-        {isError && (
-          <div className="text-sm text-red-600 mt-2">
-            {(mutation.error as any)?.response?.data?.message ??
+        {(isError || serverError) && (
+          <div className="text-sm text-red-600 mt-2 text-center">
+            {serverError ??
+              (mutation.error as any)?.response?.data?.message ??
               (mutation.error as any)?.response?.data?.error ??
               "Signup failed"}
           </div>
