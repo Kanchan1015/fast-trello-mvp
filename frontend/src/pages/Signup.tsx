@@ -1,35 +1,34 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { loginApi } from "../api/auth";
+import { registerApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
 import { setToken } from "../utils/token";
 
-const Login: React.FC = () => {
+const Signup: React.FC = () => {
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  // inline client-side and server-side field errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const emailRef = useRef<HTMLInputElement | null>(null);
+  const nameRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    emailRef.current?.focus();
+    nameRef.current?.focus();
   }, []);
 
   const mutation = useMutation<
     AuthResponse,
     any,
-    { email: string; password: string }
+    { name: string; email: string; password: string }
   >({
-    mutationFn: (payload) => loginApi(payload),
+    mutationFn: (payload) => registerApi(payload),
     onSuccess: (data) => {
       setToken(data.token);
-
       setFieldErrors({});
       setServerError(null);
       navigate("/dashboard");
@@ -37,16 +36,15 @@ const Login: React.FC = () => {
     onError: (err: any) => {
       const resp = err?.response?.data;
       if (!resp) {
-        setServerError("Login failed. Try again.");
+        setServerError("Signup failed. Try again.");
         return;
       }
-      // validation errors shape from backend: { error: "validation_failed", details: {field: msg} }
       if (resp.error === "validation_failed" && resp.details) {
         setFieldErrors(resp.details);
         setServerError(null);
         return;
       }
-      setServerError(resp.message ?? resp.error ?? "Login failed");
+      setServerError(resp.message ?? resp.error ?? "Signup failed");
     },
   });
 
@@ -56,9 +54,11 @@ const Login: React.FC = () => {
 
   const validate = () => {
     const errs: Record<string, string> = {};
+    if (!name || name.trim().length < 2) errs.name = "Enter your full name";
     if (!email) errs.email = "Email is required";
     else if (!/^\S+@\S+\.\S+$/.test(email)) errs.email = "Enter a valid email";
-    if (!password) errs.password = "Password is required";
+    if (!password || password.length < 6)
+      errs.password = "Password must be at least 6 characters";
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -67,16 +67,32 @@ const Login: React.FC = () => {
     e.preventDefault();
     setServerError(null);
     if (!validate()) return;
-    mutation.mutate({ email, password });
+    mutation.mutate({ name, email, password });
   };
 
   return (
-    <AuthLayout title="Log in">
+    <AuthLayout title="Create account">
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <div>
+          <label className="block text-sm font-medium">Full name</label>
+          <input
+            ref={nameRef}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={`mt-1 block w-full border rounded p-2 ${
+              fieldErrors.name ? "border-red-500" : ""
+            }`}
+            placeholder="Your name"
+          />
+          {fieldErrors.name && (
+            <div className="text-xs text-red-600 mt-1">{fieldErrors.name}</div>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium">Email</label>
           <input
-            ref={emailRef}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -84,10 +100,6 @@ const Login: React.FC = () => {
               fieldErrors.email ? "border-red-500" : ""
             }`}
             placeholder="you@example.com"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSubmit(e as any);
-            }}
-            autoComplete="email"
           />
           {fieldErrors.email && (
             <div className="text-xs text-red-600 mt-1">{fieldErrors.email}</div>
@@ -103,8 +115,7 @@ const Login: React.FC = () => {
             className={`mt-1 block w-full border rounded p-2 ${
               fieldErrors.password ? "border-red-500" : ""
             }`}
-            placeholder="••••••••"
-            autoComplete="current-password"
+            placeholder="At least 6 characters"
           />
           {fieldErrors.password && (
             <div className="text-xs text-red-600 mt-1">
@@ -117,10 +128,10 @@ const Login: React.FC = () => {
           type="submit"
           disabled={isLoading}
           className={`w-full py-2 rounded text-white ${
-            isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            isLoading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoading ? "Creating..." : "Create account"}
         </button>
 
         {(isError || serverError) && (
@@ -128,14 +139,14 @@ const Login: React.FC = () => {
             {serverError ??
               (mutation.error as any)?.response?.data?.message ??
               (mutation.error as any)?.response?.data?.error ??
-              "Login failed"}
+              "Signup failed"}
           </div>
         )}
 
         <div className="text-sm text-center">
-          Don't have an account?{" "}
-          <Link to="/signup" className="text-blue-600">
-            Sign up
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600">
+            Log in
           </Link>
         </div>
       </form>
@@ -143,4 +154,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Signup;
