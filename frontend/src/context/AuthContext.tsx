@@ -5,11 +5,14 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axios";
 import { getToken, clearToken, setToken } from "../utils/token";
 
-// Types
+/* Toggle debug logs during troubleshooting */
+const DEBUG_AUTH = false;
+
+/* Types */
 type User = {
   id: string;
   name: string;
@@ -19,27 +22,26 @@ type User = {
 
 type AuthContextValue = {
   user: User;
-  loading: boolean; // true while restoring session
+  isAuthenticated: boolean;
+  loading: boolean;
+  /* expose both names for compatibility */
   signIn: (token: string, user: User) => void;
-  signOut: () => void;
+  signOut: (redirect?: boolean) => void;
+  login: (token: string, user: User) => void;
+  logout: (redirect?: boolean) => void;
 };
 
-// Create context
+/* Context */
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-/**
- * AuthProvider:
- * - On mount, checks token via getToken()
- * - If token exists, calls GET /api/auth/me to validate and fetch user
- * - Exposes signIn/signOut helpers and current user
- */
+/* Provider */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const qc = useQueryClient();
   const [user, setUser] = useState<User>(null);
   const [restoring, setRestoring] = useState<boolean>(true);
 
-  // Use React Query to call /api/auth/me if token present
   const token = getToken();
 
   const query = useQuery({
@@ -48,51 +50,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const resp = await api.get("/api/auth/me");
       return resp.data as User;
     },
-    enabled: !!token, // only run if we have a token
+    enabled: !!token,
     retry: false,
     onSuccess: (u) => {
+      if (DEBUG_AUTH) console.debug("[auth] /me success", u);
       setUser(u);
+      qc.setQueryData(["me"], u);
     },
-    onError: () => {
-      // invalid token or network issue → clear token and user
+    onError: (err) => {
+      if (DEBUG_AUTH) console.debug("[auth] /me error", err);
       clearToken();
       setUser(null);
+      qc.removeQueries(["me"]);
     },
-    // We don't want this query to re-run automatically on focus for auth restore
     refetchOnWindowFocus: false,
   });
 
-  // When query settles (success or error) we stop restoring
   useEffect(() => {
     if (!token) {
       setRestoring(false);
       return;
     }
-
     if (query.isFetched || query.isError) {
       setRestoring(false);
     }
   }, [token, query.isFetched, query.isError]);
 
-  // signIn helper: save token + set user
-  const signIn = (tokenValue: string, u: User) => {
-    setToken(tokenValue);
-    setUser(u);
+  /* Core set-state helper used by both names */
+  const doSignIn = (tokenValue: string, u: User) => {
+    if (DEBUG_AUTH) console.debug("[auth] signIn", { tokenValue, user: u });
+    setToken(tokenValue); // persistent storage
+    setUser(u); // context state
+    qc.setQueryData(["me"], u); // seed react-query cache (prevents race)
   };
 
-  // signOut helper: clear token + user (and optionally redirect handled elsewhere)
-  const signOut = () => {
+  const doSignOut = (redirect = false) => {
+    if (DEBUG_AUTH) console.debug("[auth] signOut", { redirect });
     clearToken();
     setUser(null);
-    // Optionally you could navigate to /login here, but keeping this UI-agnostic is fine
+    qc.removeQueries(["me"]);
+    if (redirect) window.location.href = "/login";
   };
 
+  /* Expose both names so older code calling signIn/signOut still works */
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      isAuthenticated: !!user,
       loading: restoring || query.isFetching,
-      signIn,
-      signOut,
+      signIn: doSignIn,
+      signOut: doSignOut,
+      login: doSignIn,
+      logout: doSignOut,
     }),
     [user, restoring, query.isFetching]
   );
@@ -100,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook to consume
+/* Hook */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
