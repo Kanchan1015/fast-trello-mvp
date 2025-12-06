@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { loginApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
 import { setToken } from "../utils/token";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -14,6 +15,7 @@ const Login: React.FC = () => {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const emailRef = useRef<HTMLInputElement | null>(null);
   const { signIn } = useAuth();
 
@@ -30,26 +32,44 @@ const Login: React.FC = () => {
     onSuccess: (data) => {
       // persist token for axios interceptor
       setToken(data.token);
+
       // update app-level auth state to avoid race with AuthProvider
       signIn(data.token, data.user);
-      // clear UI errors and navigate
+
+      // show friendly toast
+      try {
+        const firstName = data.user?.name?.split?.(" ")[0] ?? "there";
+        toast.success(`Welcome back, ${firstName}!`);
+      } catch {
+        toast.success("Welcome back!");
+      }
+
+      // clear UI errors and navigate to intended route if present
       setFieldErrors({});
       setServerError(null);
-      navigate("/dashboard");
+
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     },
     onError: (err: any) => {
       const resp = err?.response?.data;
       if (!resp) {
-        setServerError("Login failed. Try again.");
+        const msg = "Login failed. Try again.";
+        setServerError(msg);
+        toast.error(msg);
         return;
       }
       // backend validation shape
       if (resp.error === "validation_failed" && resp.details) {
         setFieldErrors(resp.details);
         setServerError(null);
+        // show a generic toast for validation failure
+        toast.error("Please check the form and fix highlighted fields.");
         return;
       }
-      setServerError(resp.message ?? resp.error ?? "Login failed");
+      const msg = resp.message ?? resp.error ?? "Login failed";
+      setServerError(msg);
+      toast.error(msg);
     },
   });
 
@@ -77,8 +97,11 @@ const Login: React.FC = () => {
     <AuthLayout title="Log in">
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>
-          <label className="block text-sm font-medium">Email</label>
+          <label className="block text-sm font-medium" htmlFor="email">
+            Email
+          </label>
           <input
+            id="email"
             ref={emailRef}
             type="email"
             value={email}
@@ -88,15 +111,26 @@ const Login: React.FC = () => {
             }`}
             placeholder="you@example.com"
             autoComplete="email"
+            aria-invalid={!!fieldErrors.email}
+            aria-describedby={fieldErrors.email ? "email-error" : undefined}
           />
           {fieldErrors.email && (
-            <div className="text-xs text-red-600 mt-1">{fieldErrors.email}</div>
+            <div
+              id="email-error"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
+              {fieldErrors.email}
+            </div>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Password</label>
+          <label className="block text-sm font-medium" htmlFor="password">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -105,9 +139,17 @@ const Login: React.FC = () => {
             }`}
             placeholder="••••••••"
             autoComplete="current-password"
+            aria-invalid={!!fieldErrors.password}
+            aria-describedby={
+              fieldErrors.password ? "password-error" : undefined
+            }
           />
           {fieldErrors.password && (
-            <div className="text-xs text-red-600 mt-1">
+            <div
+              id="password-error"
+              role="alert"
+              className="text-xs text-red-600 mt-1"
+            >
               {fieldErrors.password}
             </div>
           )}
@@ -116,6 +158,7 @@ const Login: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
+          aria-busy={isLoading}
           className={`w-full py-2 rounded text-white ${
             isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
           }`}
@@ -124,7 +167,7 @@ const Login: React.FC = () => {
         </button>
 
         {(isError || serverError) && (
-          <div className="text-sm text-red-600 mt-2 text-center">
+          <div role="alert" className="text-sm text-red-600 mt-2 text-center">
             {serverError ??
               (mutation.error as any)?.response?.data?.message ??
               (mutation.error as any)?.response?.data?.error ??
