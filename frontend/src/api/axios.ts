@@ -1,11 +1,13 @@
+// frontend/src/api/axios.ts
 // Central axios instance for the app.
 // - attaches Authorization header when token present
-// - handles 401 by clearing token and redirecting to login
+// - handles 401 by clearing token, emitting logout event, showing toast and redirecting to login
 // - central place for baseURL and timeout
 // - adds the token to the api call every time
 
 import axios, { AxiosError } from "axios";
 import { getToken, clearToken } from "../utils/token";
+import toast from "react-hot-toast";
 
 // configure base URL from env, fallback to local backend
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -21,6 +23,7 @@ api.interceptors.request.use(
   (config) => {
     const token = getToken();
     if (token && config.headers) {
+      // ensure Authorization header is set for every outgoing request
       config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
@@ -32,21 +35,34 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const status = error?.response?.status;
+    // If the server didn't respond (network error), show a friendly toast
+    if (!error.response) {
+      // Avoid spamming toasts for repeated network failures
+      toast.error("Network error — please check your connection.");
+      return Promise.reject(error);
+    }
+
+    const status = error.response.status;
+
     if (status === 401) {
       // Clear token centrally so app state is consistent
       clearToken();
 
-      // Optional: you may want to use a toast library here.
-      // Example placeholder:
-      // toast.error("Session expired — please sign in");
-
-      // Redirect to login page. Using window.location is fine here
-      // because this file is not inside a React component.
-      // If you prefer programmatic navigation via react-router, expose
-      // a central event emitter or store to let UI handle it.
+      // Notify any UI listeners (AuthProvider or other) about logout.
+      // Listeners can do client-side cleanup, redirect, or show modals.
       try {
-        // prevent infinite loop if already on /login
+        window.dispatchEvent(
+          new CustomEvent("auth:logout", { detail: { reason: "unauthorized" } })
+        );
+      } catch (e) {
+        // ignore
+      }
+
+      // Show a friendly toast
+      toast.error("Session expired — please sign in");
+
+      // Redirect to login page if not already there
+      try {
         if (!window.location.pathname.startsWith("/login")) {
           window.location.href = "/login";
         }
@@ -54,6 +70,7 @@ api.interceptors.response.use(
         // fallback no-op
       }
     }
+
     return Promise.reject(error);
   }
 );
