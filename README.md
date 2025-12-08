@@ -317,7 +317,7 @@ fast-trello-mvp/
 
 ---
 
-# ▶️ Running the Project
+# Running the Project
 
 ### **Backend**
 
