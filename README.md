@@ -352,7 +352,7 @@ Frontend runs at:
 
 ---
 
-# 🗺️ Roadmap (Upcoming)
+# Roadmap (Upcoming)
 
 ### **Next Features**
 
