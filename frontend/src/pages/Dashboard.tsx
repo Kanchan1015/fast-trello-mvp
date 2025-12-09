@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { listBoards, deleteBoard, type Board } from "../api/boards";
+import { listBoards, type Board } from "../api/boards";
 import { BoardCard } from "../components/BoardCard";
 import { CreateBoardForm } from "../components/CreateBoardForm";
 import { Link } from "react-router-dom";
 import { useCreateBoard } from "../hooks/useCreateBoard";
+import { useDeleteBoard } from "../hooks/useDeleteBoard";
 
 const Dashboard: React.FC = () => {
   const qc = useQueryClient();
@@ -25,39 +26,28 @@ const Dashboard: React.FC = () => {
 
   // CREATE: use centralized optimistic hook
   const createMutation = useCreateBoard();
-
-  // DELETE mutation (v5 object syntax)
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteBoard(id),
-    onMutate: async (id: string) => {
-      setDeletingId(id);
-      await qc.cancelQueries({ queryKey: ["boards"] });
-      const previous = qc.getQueryData<Board[]>(["boards"]) ?? [];
-      qc.setQueryData<Board[]>(
-        ["boards"],
-        previous.filter((b) => b.id !== id)
-      );
-      return { previous };
-    },
-    onError: (err, id, context: any) => {
-      qc.setQueryData(["boards"], context?.previous ?? []);
-      toast.error("Delete failed");
-    },
-    onSuccess: () => {
-      toast.success("Board deleted");
-    },
-    onSettled: () => {
-      setDeletingId(null);
-      qc.invalidateQueries({ queryKey: ["boards"] });
-    },
-  });
+  // DELETE: use centralized optimistic hook
+  const deleteMutation = useDeleteBoard();
 
   const handleCreate = (name: string) => {
     createMutation.mutate({ name });
   };
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    // simple confirm dialog - replace with modal for nicer UX later
+    const ok = window.confirm(
+      "Delete this board? This action cannot be undone."
+    );
+    if (!ok) return;
+
+    // mark which board is being deleted so its button can be disabled
+    setDeletingId(id);
+
+    // call mutation and ensure deletingId is cleared after settled
+    deleteMutation.mutate(id, {
+      onSettled: () => setDeletingId(null),
+      onError: () => setDeletingId(null),
+    });
   };
 
   // loading skeleton
@@ -75,6 +65,7 @@ const Dashboard: React.FC = () => {
   }
 
   if (isError) {
+    // avoid spamming toasts on every render; show once
     toast.error("Failed to load boards");
     return (
       <div className="p-6">
