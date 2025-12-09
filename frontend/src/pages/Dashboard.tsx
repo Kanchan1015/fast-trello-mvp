@@ -7,10 +7,6 @@ import { CreateBoardForm } from "../components/CreateBoardForm";
 import { Link } from "react-router-dom";
 import { useCreateBoard } from "../hooks/useCreateBoard";
 
-/**
- * Dashboard (v5-react-query compatible)
- */
-
 const Dashboard: React.FC = () => {
   const qc = useQueryClient();
 
