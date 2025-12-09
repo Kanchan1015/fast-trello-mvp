@@ -1,15 +1,11 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import {
-  listBoards,
-  createBoard,
-  deleteBoard,
-  type Board,
-} from "../api/boards";
+import { listBoards, deleteBoard, type Board } from "../api/boards";
 import { BoardCard } from "../components/BoardCard";
 import { CreateBoardForm } from "../components/CreateBoardForm";
 import { Link } from "react-router-dom";
+import { useCreateBoard } from "../hooks/useCreateBoard";
 
 /**
  * Dashboard (v5-react-query compatible)
@@ -30,36 +26,9 @@ const Dashboard: React.FC = () => {
 
   // local state to track which board id is being deleted (for button disabled)
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
 
-  // CREATE mutation (v5 object syntax)
-  const createMutation = useMutation({
-    mutationFn: (payload: { name: string }) => createBoard(payload),
-    onMutate: async (payload) => {
-      await qc.cancelQueries({ queryKey: ["boards"] });
-      const previous = qc.getQueryData<Board[]>(["boards"]) ?? [];
-
-      const temp: Board = {
-        id: `temp-${Date.now()}`,
-        name: payload.name,
-        ownerId: "",
-        createdAt: new Date().toISOString(),
-      };
-
-      qc.setQueryData<Board[]>(["boards"], [temp, ...previous]);
-      return { previous };
-    },
-    onError: (err, _variables, context: any) => {
-      qc.setQueryData(["boards"], context?.previous ?? []);
-      toast.error("Create failed");
-    },
-    onSuccess: () => {
-      toast.success("Board created");
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["boards"] });
-    },
-  });
+  // CREATE: use centralized optimistic hook
+  const createMutation = useCreateBoard();
 
   // DELETE mutation (v5 object syntax)
   const deleteMutation = useMutation({
@@ -88,8 +57,7 @@ const Dashboard: React.FC = () => {
   });
 
   const handleCreate = (name: string) => {
-    setCreating(true);
-    createMutation.mutate({ name }, { onSettled: () => setCreating(false) });
+    createMutation.mutate({ name });
   };
 
   const handleDelete = (id: string) => {
@@ -130,7 +98,7 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center gap-4">
           <CreateBoardForm
             onCreate={handleCreate}
-            creating={creating || createMutation.isLoading}
+            creating={createMutation.isLoading}
           />
           <Link
             to="/boards/new"
