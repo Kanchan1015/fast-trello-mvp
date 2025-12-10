@@ -425,7 +425,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-➡️ `http://localhost:8080`
+`http://localhost:8080`
 
 ---
 
@@ -437,7 +437,7 @@ npm install
 npm run dev
 ```
 
-➡️ `http://localhost:5173`
+`http://localhost:5173`
 
 ---
 
