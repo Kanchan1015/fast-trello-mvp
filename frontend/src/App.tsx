@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import { Header } from "./components/Header";
 import Dashboard from "./pages/Dashboard";
 import Board from "./pages/Board";
+import BoardPage from "./pages/BoardPage";
 
 /**
  * App acts as the protected layout when wrapped by RequireAuth in main.tsx.
@@ -31,6 +32,7 @@ function App() {
           <Route path="board" element={<Board />} />
           {/* optionally make the root of protected area redirect to /dashboard */}
           <Route path="" element={<Dashboard />} />
+          <Route path="boards/:id" element={<BoardPage />} />
         </Routes>
       </main>
     </div>

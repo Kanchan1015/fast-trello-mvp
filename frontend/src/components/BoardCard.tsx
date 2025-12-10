@@ -18,12 +18,10 @@ export const BoardCard: React.FC<Props> = ({ board, onDelete, deleting }) => {
   return (
     <div className="bg-white rounded shadow p-4 flex flex-col justify-between">
       <div>
-        <Link
-          to={`/boards/${board.id}`}
-          className="text-lg font-semibold hover:underline"
-        >
-          {board.name}
+        <Link to={`/boards/${board.id}`} className="block">
+          <h3 className="font-medium">{board.name}</h3>
         </Link>
+
         <div className="text-xs text-gray-500 mt-2">Created: {created}</div>
       </div>
 
