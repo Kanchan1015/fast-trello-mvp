@@ -42,14 +42,15 @@ Below is everything implemented so far in the project.
 ## **2. Frontend Setup (Vite + React + TS)**
 
 - Scaffolded Vite React + TypeScript project
-- Installed:
+
+- Installed core dependencies:
 
   - React Router
   - React Query
   - Axios
-  - TailwindCSS (optional)
+  - TailwindCSS (optional but recommended)
 
-- Created folder structure:
+- Created app structure:
 
   ```
   src/
@@ -60,7 +61,7 @@ Below is everything implemented so far in the project.
     context/
   ```
 
-- Added base routes & placeholder pages (Login, Signup, Dashboard, Board)
+- Added base routes & placeholder pages
 
 ---
 
@@ -68,174 +69,168 @@ Below is everything implemented so far in the project.
 
 - Generated project with:
 
-  - Spring Web
-  - Spring Security
-  - Spring Data JPA
+  - Web
+  - Security
+  - JPA
   - Validation
-  - PostgreSQL Driver
   - Flyway
+  - PostgreSQL driver
 
-- Basic package layout created:
+- Added package layout for clean architecture:
 
   ```
-  com.trello.backend.auth
-  com.trello.backend.common
-  com.trello.backend.config
+  auth/
+  board/
+  common/
+  config/
   ```
 
 ---
 
 ## **4. Database Integration (Neon + Flyway)**
 
-- Connected to Neon PostgreSQL using environment variables
+- Connected backend to Neon PostgreSQL (env variables)
 
-- Added initial migration `V1__init.sql` creating:
+- Flyway migrations implemented:
+
+  **`V1__init.sql`**
+  Creates:
 
   - `users`
-  - `boards`
+  - **`boards`**
   - `lists`
   - `cards`
 
-- Confirmed Flyway runs cleanly on startup
+  **`V3__create_boards.sql`**
+  Ensures board schema is correct:
+
+  - `id`
+  - `name`
+  - `owner_id`
+  - `created_at`
+
+- Flyway verified through logs & Neon console
 
 ---
 
 ## **5. Spring Security Configuration**
 
-- Security enabled (not disabled)
-- Stateless authentication with JWT
-- CORS enabled for `http://localhost:5173`
-- Public endpoints:
+- Stateless JWT authentication
 
-  - `/health`
+- Completely configured filter chain with:
+
+  - `JwtAuthenticationFilter`
+  - Password encoder (BCrypt)
+  - AuthEntryPoint
+  - UserDetailsService
+
+- Public routes:
+
   - `/api/auth/**`
+  - `/health`
 
-- All other endpoints require JWT
-- Registered `BCryptPasswordEncoder`
+- All other endpoints protected
 
 ---
 
 ## **6. Health Endpoint**
 
-`GET /health` returns:
+Simple app check at:
 
-```json
-{ "status": "UP" }
+```
+GET /health → { "status": "UP" }
 ```
 
 ---
 
 ## **7. User Model, DTOs & Auth Service**
 
-Implemented complete backend authentication flow:
+Implemented:
 
 - `User` JPA entity
+
 - DTOs:
 
-  - `RegisterRequest`
-  - `LoginRequest`
-  - `AuthResponse`
-  - `UserDto`
+  - RegisterRequest
+  - LoginRequest
+  - AuthResponse
+  - UserDto
 
-- `UserRepository` with `findByEmail`, `existsByEmail`
-- `AuthService`:
+- `UserRepository` with email lookup
 
-  - Registration (hash password, validate email)
-  - Login (verify password)
-  - `getCurrentUser()` from Spring SecurityContext
+- `AuthService` handles:
 
-- Custom exceptions & global error handler
+  - registration
+  - password hashing
+  - login validation
+  - pulling user from SecurityContext
 
 ---
 
 ## **8. JWT Authentication System**
 
-- Implemented `JwtService`:
-
-  - Create & validate tokens
-  - HS256 signing
-  - Expiry management
-
-- Implemented `JwtAuthenticationFilter`:
-
-  - Reads Authorization header
-  - Validates token
-  - Populates SecurityContext
-
-- Wired into `SecurityConfig` before default filters
+- `JwtService` for issuing + validating tokens
+- HMAC signing (HS256)
+- Expiry handling
+- `JwtAuthenticationFilter` loads user into SecurityContext
+- Integrated into security chain
 
 ---
 
 ## **9. Authentication API**
 
-`/api/auth` endpoints:
+Auth endpoints implemented:
 
-| Method | Endpoint             | Description                              |
-| ------ | -------------------- | ---------------------------------------- |
-| POST   | `/api/auth/register` | Create account, return `{ token, user }` |
-| POST   | `/api/auth/login`    | Authenticate & return `{ token, user }`  |
-| GET    | `/api/auth/me`       | Get current authenticated user           |
+| Method | Endpoint             | Description                            |
+| ------ | -------------------- | -------------------------------------- |
+| POST   | `/api/auth/register` | Register new user, return token + user |
+| POST   | `/api/auth/login`    | Login user, return token + user        |
+| GET    | `/api/auth/me`       | Fetch authenticated user               |
 
-Validation errors and auth failures return structured error responses.
+Structured error messages + validation included.
 
 ---
 
 ## **10. Token Storage & Axios Interceptors**
 
-Frontend now uses a unified token system:
+- Token stored with helpers:
 
-### **Token Helpers (`utils/token.ts`):**
+  ```
+  getToken()
+  setToken()
+  clearToken()
+  ```
 
-```
-setToken()
-getToken()
-clearToken()
-```
-
-### **Axios instance**
-
-- Attaches `Authorization: Bearer <token>`
-- Handles 401:
-
-  - Clears token
-  - Shows toast (“Session expired”)
-  - Redirects to `/login`
+- Axios instance automatically attaches JWT
+- Handles 401 → clear token + route to login
 
 ---
 
-## **11. Frontend Authentication Experience (Login/Signup Pages)**
+## **11. Frontend Authentication Experience**
 
-Implemented polished Login & Signup flows:
+Login & Signup pages implemented with:
 
 - Controlled inputs
-- Inline validation (email, password, required fields)
-- Server error display
-- Disabled button during submission
-- Autofocus + Enter key submit
-- Toast notifications:
-
-  - Login success
-  - Signup success
-  - Error feedback
+- Validation
+- Error display
+- Loading states
+- Toasts for success/error
+- Keyboard accessibility
 
 ---
 
 ## **12. App Bootstrap & Session Restore**
 
-Added a complete `AuthProvider` using React Context + React Query:
-
-- Restores session on startup when a token exists
-- Fetches `/api/auth/me` to validate
-- Shows loading splash during restore
-- Prevents race conditions by updating context + React Query cache instantly after login
-
-Context exposes:
+- `AuthProvider` built with React Context
+- Restores session using `/api/auth/me`
+- Prevents UI flashes before auth state resolves
+- Exposes:
 
 ```
 user
 isAuthenticated
 loading
-login(token, user)
+login()
 logout()
 ```
 
@@ -243,45 +238,148 @@ logout()
 
 ## **13. Protected Routing**
 
-Added `<RequireAuth />` wrapper:
+`<RequireAuth />` wrapper added:
 
-- Guards protected pages:
-
-  - `/dashboard`
-  - `/boards/:id`
-
-- Redirects unauthenticated users to `/login`
-- Preserves intended URL (`location.state.from`)
-- Shows splash screen during auth restore
-- Prevents flashing protected content
+- Guards dashboard + board pages
+- Redirects unauthenticated users
+- Prevents protected content flashing
+- Persists “intended route” for redirect after login
 
 ---
 
-## **14. Global Header & Sign-Out Button**
+## **14. Global Header & Sign-Out**
 
-Added a simple `Header` component for authenticated layouts:
-
-- Shows current user’s name
-- “Sign out” button:
-
-  - Clears token
-  - Clears auth state
-  - Redirects to `/login`
-  - Shows toast confirmation
+- Header shows user name
+- Logout clears token + context
+- Redirects + toast shown
 
 ---
 
 ## **15. UX & Accessibility Polish**
 
-- Added `react-hot-toast` for clean notifications
-- Improved forms using:
+- Toast feedback for major actions
+- Aria labels for form fields & buttons
+- `role="alert"` for error messages
+- Focus management after navigation
+- Disabled buttons & spinners during create/delete
 
-  - `aria-invalid`
-  - `aria-describedby`
-  - `role="alert"`
+---
 
-- Focus management after navigation (`element.focus()`)
-- Error states clearly communicated visually & via screen readers
+## **16. Board Feature — Backend**
+
+Backend now supports full board CRUD.
+
+Implemented:
+
+### **Board Entity & Repository**
+
+- `Board` JPA entity with:
+
+  - id
+  - name
+  - ownerId
+  - createdAt
+
+- `BoardRepository` with:
+
+  ```
+  findByOwnerId(ownerId)
+  ```
+
+### **BoardService**
+
+- Create board
+- List boards per owner
+- Fetch single board
+- Delete board
+- Ownership enforced at service layer
+
+### **BoardController**
+
+Endpoints:
+
+| Method | Endpoint           | Description               |
+| ------ | ------------------ | ------------------------- |
+| POST   | `/api/boards`      | Create board              |
+| GET    | `/api/boards`      | List user boards          |
+| GET    | `/api/boards/{id}` | Get board (owner only)    |
+| DELETE | `/api/boards/{id}` | Delete board (owner only) |
+
+Security fully integrated.
+
+---
+
+## **17. Frontend — Boards API Client**
+
+Added `src/api/boards.ts`:
+
+```
+createBoard()
+listBoards()
+getBoard()
+deleteBoard()
+```
+
+Centralized axios handles auth automatically.
+
+---
+
+## **18. Dashboard Page**
+
+Fully implemented dashboard experience:
+
+- Fetch boards with React Query
+- Render board cards
+- Empty state handling
+- Loading skeletons
+- Delete button per board
+- Link to `/boards/:id`
+
+---
+
+## **19. Create Board — Optimistic UI**
+
+- Instant board creation with optimistic cache update
+- Temporary `temp-<>` ID while waiting for server
+- Rollback on error
+- Toasts for success/failure
+- Disabled button while creating
+
+---
+
+## **20. Delete Board — Optimistic UI**
+
+- Inline delete button with confirmation
+- Immediate removal from UI
+- Rollback on error
+- Toasts for success/failure
+- Loading state per-card
+
+---
+
+## **21. Board Page Route Stub**
+
+Added route:
+
+```
+/boards/:id
+```
+
+Implemented `BoardPage`:
+
+- Fetches board data
+- Shows loading/error states
+- Header + created date
+- Placeholder for lists/cards (Day 5)
+
+---
+
+## **22. Dashboard UX Polish**
+
+- Smooth transitions for cards
+- Accessible buttons + labels
+- Focus input automatically when creating boards
+- Better spacing & layout structure
 
 ---
 
@@ -296,16 +394,16 @@ fast-trello-mvp/
 │   │   ├── components/
 │   │   ├── api/
 │   │   ├── utils/
+│   │   ├── hooks/
 │   │   ├── context/
 │   │   └── main.tsx
-│   └── package.json
 │
 └── backend/
     ├── src/main/java/com/trello/backend/
-    │   ├── config/
-    │   ├── common/
     │   ├── auth/
     │   ├── board/
+    │   ├── config/
+    │   ├── common/
     │   └── BackendApplication.java
     │
     ├── src/main/resources/
@@ -321,47 +419,39 @@ fast-trello-mvp/
 
 ### **Backend**
 
-1. Load environment variables:
-
-```bash
-set -o allexport; source .env.backend; set +o allexport
 ```
-
-2. Start backend:
-
-```bash
+set -o allexport; source .env.backend; set +o allexport
 cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend runs at:
-➡️ [http://localhost:8080](http://localhost:8080)
+➡️ `http://localhost:8080`
 
 ---
 
 ### **Frontend**
 
-```bash
+```
 cd frontend
 npm install
 npm run dev
 ```
 
-Frontend runs at:
-➡️ [http://localhost:5173](http://localhost:5173)
+➡️ `http://localhost:5173`
 
 ---
 
 # Roadmap (Upcoming)
 
-### **Next Features**
+### **Next: Lists & Cards System**
 
-- Board CRUD API + frontend
-- Lists & Cards API
-- Drag-and-drop (`@dnd-kit`)
-- Optimistic updates
-- Realtime sync (WebSocket/SSE)
-- Deployment (Vercel + Render/Railway + Neon)
+- Flyway migration for `lists` & `cards`
+- JPA models, repos, services
+- List CRUD
+- Card CRUD
+- Drag & Drop with `@dnd-kit`
+- Real-time sync (WebSockets)
+- Board page full UX
 
 ---
 
