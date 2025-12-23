@@ -21,13 +21,41 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
 
   const mutation = useMutation({
     mutationFn: () => createList(boardId, { title }),
-    onSuccess: () => {
+    onMutate: async () => {
+      await qc.cancelQueries(["lists", boardId]);
+
+      const previous = qc.getQueryData<ListItem[]>(["lists", boardId]) ?? [];
+
+      const lastPos =
+        previous.length > 0 ? previous[previous.length - 1].position : 0;
+
+      const tempList: ListItem = {
+        id: `temp-${Date.now()}`,
+        boardId,
+        title,
+        position: lastPos + 1000,
+        createdAt: new Date().toISOString(),
+      };
+
+      qc.setQueryData<ListItem[]>(["lists", boardId], [...previous, tempList]);
+
+      return { previous, tempId: tempList.id };
+    },
+    onError: (_, __, ctx) => {
+      qc.setQueryData(["lists", boardId], ctx?.previous);
+      toast.error("Failed to create list");
+    },
+    onSuccess: (data, _, ctx) => {
+      qc.setQueryData<ListItem[]>(["lists", boardId], (old = []) =>
+        old.map((l) => (l.id === ctx?.tempId ? data : l))
+      );
       toast.success("List created");
       setTitle("");
       setOpen(false);
+    },
+    onSettled: () => {
       qc.invalidateQueries(["lists", boardId]);
     },
-    onError: () => toast.error("Create failed"),
   });
 
   if (!open) {

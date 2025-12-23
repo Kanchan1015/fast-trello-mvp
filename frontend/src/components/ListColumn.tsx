@@ -23,23 +23,62 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
 
   /* -------- Rename list -------- */
   const renameMutation = useMutation({
-    mutationFn: () => patchList(boardId, list.id, { title }),
+    mutationFn: (newTitle: string) =>
+      patchList(boardId, list.id, { title: newTitle }),
+
+    onMutate: async (newTitle) => {
+      await qc.cancelQueries(["lists", boardId]);
+      const previous = qc.getQueryData<ListItem[]>(["lists", boardId]);
+
+      qc.setQueryData<ListItem[]>(["lists", boardId], (old = []) =>
+        old.map((l) => (l.id === list.id ? { ...l, title: newTitle } : l))
+      );
+
+      return { previous };
+    },
+
+    onError: (_, __, ctx) => {
+      qc.setQueryData(["lists", boardId], ctx?.previous);
+      toast.error("Rename failed");
+    },
+
     onSuccess: () => {
       toast.success("List renamed");
       setEditing(false);
+    },
+
+    onSettled: () => {
       qc.invalidateQueries(["lists", boardId]);
     },
-    onError: () => toast.error("Rename failed"),
   });
 
   /* -------- Delete list -------- */
   const deleteMutation = useMutation({
     mutationFn: () => deleteList(boardId, list.id),
+
+    onMutate: async () => {
+      await qc.cancelQueries(["lists", boardId]);
+      const previous = qc.getQueryData<ListItem[]>(["lists", boardId]);
+
+      qc.setQueryData<ListItem[]>(["lists", boardId], (old = []) =>
+        old.filter((l) => l.id !== list.id)
+      );
+
+      return { previous };
+    },
+
+    onError: (_, __, ctx) => {
+      qc.setQueryData(["lists", boardId], ctx?.previous);
+      toast.error("Delete failed");
+    },
+
     onSuccess: () => {
       toast.success("List deleted");
+    },
+
+    onSettled: () => {
       qc.invalidateQueries(["lists", boardId]);
     },
-    onError: () => toast.error("Delete failed"),
   });
 
   const onBlurSave = () => {
