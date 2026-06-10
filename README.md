@@ -1,7 +1,7 @@
 # Fast Trello MVP
 
 A lightweight Trello-style board app built with **Spring Boot**, **React (Vite + TypeScript)**, **Neon PostgreSQL**, **Flyway**, and **JWT Authentication**.
-Designed as an **interview-ready MVP** with clean architecture and minimal, well-structured features.
+Designed with clean architecture and minimal, well-structured features.
 
 ---
 
