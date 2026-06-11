@@ -16,22 +16,33 @@ export const BoardCard: React.FC<Props> = ({ board, onDelete, deleting }) => {
     : "";
 
   return (
-    <div className="bg-white rounded shadow p-4 flex flex-col justify-between">
+    <div className="app-panel group flex min-h-36 flex-col justify-between rounded-xl p-4 transition hover:-translate-y-0.5 hover:shadow-xl">
       <div>
         <Link to={`/boards/${board.id}`} className="block">
-          <h3 className="font-medium">{board.name}</h3>
+          <div className="mb-4 h-2 w-16 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 transition group-hover:w-24" />
+          <h3 className="text-lg font-semibold text-slate-900">
+            {board.name}
+          </h3>
         </Link>
 
-        <div className="text-xs text-gray-500 mt-2">Created: {created}</div>
+        <div className="mt-2 text-xs text-slate-500">Created: {created}</div>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-5 flex items-center justify-between">
+        <Link
+          to={`/boards/${board.id}`}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          Open board
+        </Link>
         <button
           onClick={() => onDelete(board.id)}
           disabled={deleting}
           aria-label={`Delete board ${board.name}`}
-          className={`px-3 py-1 text-sm rounded ${
-            deleting ? "bg-gray-300" : "bg-red-600 text-white hover:bg-red-700"
+          className={`px-3 py-1.5 text-sm ${
+            deleting
+              ? "rounded-lg bg-slate-200 text-slate-500"
+              : "danger-button"
           }`}
         >
           {deleting ? "Deleting…" : "Delete"}

@@ -62,7 +62,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-64 bg-gray-200 rounded p-3 text-left flex-shrink-0"
+        className="w-68 flex-shrink-0 rounded-xl border border-dashed border-blue-300 bg-blue-50/80 p-4 text-left text-sm font-semibold text-blue-700 transition hover:border-blue-500 hover:bg-white"
         aria-label="Add list"
       >
         + Add a list
@@ -71,12 +71,12 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
   }
 
   return (
-    <div className="w-64 bg-gray-200 rounded p-3 flex-shrink-0">
+    <div className="app-panel w-68 flex-shrink-0 rounded-xl p-3">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="List title"
-        className="w-full p-2 rounded mb-2 text-sm"
+        className="field mb-2 w-full px-3 py-2 text-sm"
         autoFocus
         aria-label="List title"
       />
@@ -85,7 +85,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
         <button
           onClick={() => mutation.mutate()}
           disabled={!title.trim()}
-          className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+          className="primary-button px-3 py-1.5 text-sm disabled:bg-slate-300 disabled:shadow-none"
         >
           Add
         </button>
@@ -94,7 +94,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
             setOpen(false);
             setTitle("");
           }}
-          className="text-sm"
+          className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
         >
           Cancel
         </button>

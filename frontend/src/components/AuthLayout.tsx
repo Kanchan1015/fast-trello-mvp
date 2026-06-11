@@ -6,14 +6,22 @@ export const AuthLayout: React.FC<{
   title?: string;
 }> = ({ children, title }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow">
-        <h1 className="text-2xl font-semibold mb-4 text-center">
-          {title ?? "Sign in"}
-        </h1>
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      <div className="app-panel w-full max-w-md rounded-2xl p-7">
+        <div className="mb-6 text-center">
+          <div className="brand-band mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl font-bold">
+            FT
+          </div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {title ?? "Sign in"}
+          </h1>
+          <p className="mt-1 text-sm text-blue-700">
+            Manage boards, lists, and work in progress.
+          </p>
+        </div>
         {children}
-        <footer className="text-xs text-center text-gray-500 mt-6">
-          Fast Trello MVP — small demo
+        <footer className="text-xs text-center text-slate-500 mt-6">
+          Fast Trello MVP - React frontend demo
         </footer>
       </div>
     </div>

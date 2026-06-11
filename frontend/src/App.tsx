@@ -12,19 +12,11 @@ import BoardPage from "./pages/BoardPage";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-5xl mx-auto p-4">
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
         {/* Optional page heading for quick visual check */}
-        <h1
-          id="main-heading"
-          className="text-2xl font-semibold mb-4"
-          tabIndex={-1}
-        >
-          Dashboard
-        </h1>
-
         {/* Nested routes — these are relative to the parent path "/*" */}
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />

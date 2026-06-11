@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import { listBoards, type Board } from "../api/boards";
 import { BoardCard } from "../components/BoardCard";
 import { CreateBoardForm } from "../components/CreateBoardForm";
-import { Link } from "react-router-dom";
 import { useCreateBoard } from "../hooks/useCreateBoard";
 import { useDeleteBoard } from "../hooks/useDeleteBoard";
 
@@ -48,57 +47,72 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  // loading skeleton
   if (isLoading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-4">Your boards</h1>
+      <section className="py-4">
+        <div className="mb-6">
+          <p className="text-sm font-medium text-blue-600">Workspace</p>
+          <h1 className="text-3xl font-semibold text-slate-950">
+            Your boards
+          </h1>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded p-4 animate-pulse h-28" />
+            <div
+              key={i}
+              className="app-panel h-36 animate-pulse rounded-xl p-4"
+            />
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
   if (isError) {
-    // avoid spamming toasts on every render; show once
     toast.error("Failed to load boards");
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-4">Your boards</h1>
-        <div className="text-red-600">
+      <section className="py-4">
+        <h1 className="mb-4 text-3xl font-semibold text-slate-950">
+          Your boards
+        </h1>
+        <div className="app-panel rounded-xl p-5 text-red-600">
           Could not load boards. Try refreshing.
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Your boards</h1>
+    <section className="py-4">
+      <div className="brand-band mb-8 grid gap-5 rounded-2xl p-6 lg:grid-cols-[1fr_26rem] lg:items-end">
+        <div>
+          <p className="text-sm font-medium text-blue-100">Workspace</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
+            Your boards
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-blue-50">
+            Create boards for projects, then organize the work into lists.
+          </p>
+        </div>
 
-        <div className="flex items-center gap-4">
+        <div className="rounded-xl bg-white/95 p-3 text-slate-900 shadow-sm">
           <CreateBoardForm
             onCreate={handleCreate}
             creating={createMutation.isPending}
           />
-          <Link
-            to="/boards/new"
-            className="text-sm text-gray-500 hover:underline"
-          >
-            Advanced create
-          </Link>
         </div>
       </div>
 
       {boards.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg">No boards yet — create one to get started.</p>
-          <p className="text-sm text-gray-500 mt-2">
+        <div className="soft-blue-panel rounded-xl px-6 py-14 text-center">
+          <p className="text-lg font-semibold text-slate-800">
+            No boards yet.
+          </p>
+          <p className="text-sm text-slate-500 mt-2">
             Boards help you organize tasks into lists and cards.
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Use the form above to create your first one.
           </p>
         </div>
       ) : (
@@ -113,7 +127,7 @@ const Dashboard: React.FC = () => {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

@@ -51,22 +51,26 @@ const BoardPage: React.FC = () => {
   /* ---------------- Loading ---------------- */
   if (boardLoading) {
     return (
-      <div className="p-6">
-        <Link to="/dashboard" className="text-sm text-blue-600">
+      <div className="py-4">
+        <Link to="/dashboard" className="text-sm font-medium text-blue-600">
           ← Back
         </Link>
-        <div className="mt-6">Loading board…</div>
+        <div className="app-panel mt-6 rounded-xl p-5 text-slate-600">
+          Loading board...
+        </div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="p-6">
-        <Link to="/dashboard" className="text-sm text-blue-600">
+      <div className="py-4">
+        <Link to="/dashboard" className="text-sm font-medium text-blue-600">
           ← Back
         </Link>
-        <div className="mt-6 text-red-600">Board not found.</div>
+        <div className="app-panel mt-6 rounded-xl p-5 text-red-600">
+          Board not found.
+        </div>
       </div>
     );
   }
@@ -75,30 +79,32 @@ const BoardPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b bg-white">
-        <Link to="/dashboard" className="text-sm text-blue-600">
+      <div className="brand-band rounded-xl p-5">
+        <Link to="/dashboard" className="text-sm font-medium text-blue-100">
           ← Back
         </Link>
 
-        <h1 className="text-2xl font-semibold mt-2" tabIndex={-1}>
+        <h1 className="mt-3 text-3xl font-semibold text-white" tabIndex={-1}>
           {board.name}
         </h1>
 
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="text-xs text-blue-100 mt-1">
           Created:{" "}
           {board.createdAt ? format(new Date(board.createdAt), "PPP p") : "—"}
         </div>
       </div>
 
       {/* Lists area */}
-      <div className="flex-1 overflow-x-auto bg-gray-50">
-        <div className="flex items-start gap-4 p-4 min-h-full">
+      <div className="mt-5 flex-1 overflow-x-auto">
+        <div className="flex min-h-[28rem] items-start gap-4 pb-4">
           {listsLoading ? (
-            <div className="text-gray-600">Loading lists…</div>
+            <div className="app-panel rounded-xl p-4 text-slate-600">
+              Loading lists...
+            </div>
           ) : lists.length === 0 ? (
             <>
-              <div className="text-gray-600">
-                No lists yet — add your first list.
+              <div className="app-panel rounded-xl p-4 text-sm text-slate-600">
+                No lists yet. Add your first list.
               </div>
               <AddList boardId={boardId!} />
             </>

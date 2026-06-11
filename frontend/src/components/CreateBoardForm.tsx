@@ -32,8 +32,8 @@ export const CreateBoardForm: React.FC<Props> = ({
   const hasError = !!error;
 
   return (
-    <form onSubmit={submit} className="w-full max-w-md">
-      <div className="flex gap-2 items-start">
+    <form onSubmit={submit} className="w-full">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
         <div className="flex-1">
           <input
             ref={inputRef}
@@ -43,8 +43,8 @@ export const CreateBoardForm: React.FC<Props> = ({
             aria-label="Board name"
             aria-invalid={hasError}
             aria-describedby={hasError ? "create-board-error" : undefined}
-            className={`w-full border rounded p-2 ${
-              hasError ? "border-red-500" : "border-gray-300"
+            className={`field w-full px-3 py-2.5 ${
+              hasError ? "border-red-500" : ""
             }`}
           />
 
@@ -64,10 +64,10 @@ export const CreateBoardForm: React.FC<Props> = ({
           type="submit"
           disabled={creating}
           aria-busy={creating}
-          className={`px-4 py-2 rounded text-white transition ${
+          className={`px-4 py-2.5 text-sm ${
             creating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
+              ? "rounded-lg bg-slate-300 font-semibold text-slate-600"
+              : "primary-button"
           }`}
         >
           {creating ? "Creating…" : "Create"}

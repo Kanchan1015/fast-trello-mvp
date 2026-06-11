@@ -91,22 +91,22 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
   };
 
   return (
-    <div className="w-64 bg-gray-100 rounded p-3 flex-shrink-0">
+    <div className="app-panel w-68 flex-shrink-0 rounded-xl border-t-4 border-t-blue-500 p-3">
       {/* Header */}
-      <div className="flex justify-between items-center mb-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         {editing ? (
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={onBlurSave}
             onKeyDown={(e) => e.key === "Enter" && onBlurSave()}
-            className="w-full p-1 rounded text-sm"
+            className="field w-full px-2 py-1.5 text-sm"
             autoFocus
             aria-label="Edit list title"
           />
         ) : (
           <h3
-            className="font-semibold text-sm cursor-pointer"
+            className="cursor-pointer rounded px-1 py-1 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             onClick={() => setEditing(true)}
           >
             {list.title}
@@ -120,14 +120,16 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
             }
           }}
           aria-label="Delete list"
-          className="text-gray-500 hover:text-red-600 text-sm"
+          className="rounded-lg px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600"
         >
           ✕
         </button>
       </div>
 
       {/* Cards placeholder */}
-      <div className="text-xs text-gray-500 mt-4">Cards coming next…</div>
+      <div className="mt-4 rounded-lg border border-dashed border-blue-200 bg-blue-50 px-3 py-4 text-xs text-blue-700">
+        Cards coming next...
+      </div>
     </div>
   );
 };

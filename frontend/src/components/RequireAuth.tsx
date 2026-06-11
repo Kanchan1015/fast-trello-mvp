@@ -22,8 +22,8 @@ export const RequireAuth: React.FC<{ children?: React.ReactNode }> = ({
   if (loading) {
     // Small splash while verifying session — prevents flashing protected UI
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">
+        Restoring session...
       </div>
     );
   }
