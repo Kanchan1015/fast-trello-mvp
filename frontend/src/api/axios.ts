@@ -54,7 +54,7 @@ api.interceptors.response.use(
         window.dispatchEvent(
           new CustomEvent("auth:logout", { detail: { reason: "unauthorized" } })
         );
-      } catch (e) {
+      } catch {
         // ignore
       }
 
@@ -66,7 +66,7 @@ api.interceptors.response.use(
         if (!window.location.pathname.startsWith("/login")) {
           window.location.href = "/login";
         }
-      } catch (e) {
+      } catch {
         // fallback no-op
       }
     }

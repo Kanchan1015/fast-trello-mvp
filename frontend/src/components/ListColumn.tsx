@@ -27,7 +27,7 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
       patchList(boardId, list.id, { title: newTitle }),
 
     onMutate: async (newTitle) => {
-      await qc.cancelQueries(["lists", boardId]);
+      await qc.cancelQueries({ queryKey: ["lists", boardId] });
       const previous = qc.getQueryData<ListItem[]>(["lists", boardId]);
 
       qc.setQueryData<ListItem[]>(["lists", boardId], (old = []) =>
@@ -48,7 +48,7 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
     },
 
     onSettled: () => {
-      qc.invalidateQueries(["lists", boardId]);
+      qc.invalidateQueries({ queryKey: ["lists", boardId] });
     },
   });
 
@@ -57,7 +57,7 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
     mutationFn: () => deleteList(boardId, list.id),
 
     onMutate: async () => {
-      await qc.cancelQueries(["lists", boardId]);
+      await qc.cancelQueries({ queryKey: ["lists", boardId] });
       const previous = qc.getQueryData<ListItem[]>(["lists", boardId]);
 
       qc.setQueryData<ListItem[]>(["lists", boardId], (old = []) =>
@@ -77,13 +77,13 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
     },
 
     onSettled: () => {
-      qc.invalidateQueries(["lists", boardId]);
+      qc.invalidateQueries({ queryKey: ["lists", boardId] });
     },
   });
 
   const onBlurSave = () => {
     if (title.trim() && title !== list.title) {
-      renameMutation.mutate();
+      renameMutation.mutate(title.trim());
     } else {
       setEditing(false);
       setTitle(list.title);

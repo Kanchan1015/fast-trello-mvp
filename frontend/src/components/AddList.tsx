@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import { createList } from "../api/lists";
+import { createList, type ListItem } from "../api/lists";
 
 type Props = {
   boardId: string;
@@ -22,7 +22,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
   const mutation = useMutation({
     mutationFn: () => createList(boardId, { title }),
     onMutate: async () => {
-      await qc.cancelQueries(["lists", boardId]);
+      await qc.cancelQueries({ queryKey: ["lists", boardId] });
 
       const previous = qc.getQueryData<ListItem[]>(["lists", boardId]) ?? [];
 
@@ -54,7 +54,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
       setOpen(false);
     },
     onSettled: () => {
-      qc.invalidateQueries(["lists", boardId]);
+      qc.invalidateQueries({ queryKey: ["lists", boardId] });
     },
   });
 

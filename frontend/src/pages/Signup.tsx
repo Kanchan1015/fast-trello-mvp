@@ -5,6 +5,7 @@ import { registerApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
 import { setToken } from "../utils/token";
+import { useAuth } from "../context/AuthContext";
 
 const Signup: React.FC = () => {
   const [name, setName] = useState<string>("");
@@ -16,6 +17,7 @@ const Signup: React.FC = () => {
 
   const navigate = useNavigate();
   const nameRef = useRef<HTMLInputElement | null>(null);
+  const { signIn } = useAuth();
 
   useEffect(() => {
     nameRef.current?.focus();
@@ -29,6 +31,7 @@ const Signup: React.FC = () => {
     mutationFn: (payload) => registerApi(payload),
     onSuccess: (data) => {
       setToken(data.token);
+      signIn(data.token, data.user);
       setFieldErrors({});
       setServerError(null);
       navigate("/dashboard");

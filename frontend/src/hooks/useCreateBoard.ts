@@ -40,11 +40,11 @@ export function useCreateBoard() {
       // return context to rollback if needed
       return { previous, tempId };
     },
-    onError: (err, payload, context: any) => {
+    onError: (_err, _payload, context: any) => {
       qc.setQueryData(["boards"], context?.previous ?? []);
       toast.error("Could not create board — please try again.");
     },
-    onSuccess: (data, payload, context: any) => {
+    onSuccess: (data, _payload, context: any) => {
       // Replace the temp item with the real one returned by server
       qc.setQueryData<Board[]>(["boards"], (old = []) => {
         // map temp id to real id

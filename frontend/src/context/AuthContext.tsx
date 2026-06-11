@@ -52,17 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     enabled: !!token,
     retry: false,
-    onSuccess: (u) => {
-      if (DEBUG_AUTH) console.debug("[auth] /me success", u);
-      setUser(u);
-      qc.setQueryData(["me"], u);
-    },
-    onError: (err) => {
-      if (DEBUG_AUTH) console.debug("[auth] /me error", err);
-      clearToken();
-      setUser(null);
-      qc.removeQueries(["me"]);
-    },
     refetchOnWindowFocus: false,
   });
 
@@ -76,6 +65,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [token, query.isFetched, query.isError]);
 
+  useEffect(() => {
+    if (query.isSuccess) {
+      if (DEBUG_AUTH) console.debug("[auth] /me success", query.data);
+      setUser(query.data);
+      qc.setQueryData(["me"], query.data);
+    }
+  }, [qc, query.data, query.isSuccess]);
+
+  useEffect(() => {
+    if (query.isError) {
+      if (DEBUG_AUTH) console.debug("[auth] /me error", query.error);
+      clearToken();
+      setUser(null);
+      qc.removeQueries({ queryKey: ["me"] });
+    }
+  }, [qc, query.error, query.isError]);
+
   /* Core set-state helper used by both names */
   const doSignIn = (tokenValue: string, u: User) => {
     if (DEBUG_AUTH) console.debug("[auth] signIn", { tokenValue, user: u });
@@ -88,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (DEBUG_AUTH) console.debug("[auth] signOut", { redirect });
     clearToken();
     setUser(null);
-    qc.removeQueries(["me"]);
+    qc.removeQueries({ queryKey: ["me"] });
     if (redirect) window.location.href = "/login";
   };
 

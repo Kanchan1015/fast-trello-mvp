@@ -23,7 +23,7 @@ export function useDeleteBoard() {
       );
       return { previous };
     },
-    onError: (err, id, context: any) => {
+    onError: (_err, _id, context: any) => {
       // rollback
       qc.setQueryData(["boards"], context?.previous ?? []);
       toast.error("Delete failed — action undone");

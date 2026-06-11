@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { listBoards, type Board } from "../api/boards";
 import { BoardCard } from "../components/BoardCard";
@@ -9,8 +9,6 @@ import { useCreateBoard } from "../hooks/useCreateBoard";
 import { useDeleteBoard } from "../hooks/useDeleteBoard";
 
 const Dashboard: React.FC = () => {
-  const qc = useQueryClient();
-
   // fetch boards
   const {
     data: boards = [],
@@ -85,7 +83,7 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center gap-4">
           <CreateBoardForm
             onCreate={handleCreate}
-            creating={createMutation.isLoading}
+            creating={createMutation.isPending}
           />
           <Link
             to="/boards/new"
