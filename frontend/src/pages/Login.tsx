@@ -106,7 +106,7 @@ const Login: React.FC = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`mt-1 block w-full border rounded p-2 ${
+            className={`field mt-1 block w-full px-3 py-2.5 ${
               fieldErrors.email ? "border-red-500" : ""
             }`}
             placeholder="you@example.com"
@@ -134,7 +134,7 @@ const Login: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`mt-1 block w-full border rounded p-2 ${
+            className={`field mt-1 block w-full px-3 py-2.5 ${
               fieldErrors.password ? "border-red-500" : ""
             }`}
             placeholder="••••••••"
@@ -159,8 +159,10 @@ const Login: React.FC = () => {
           type="submit"
           disabled={isLoading}
           aria-busy={isLoading}
-          className={`w-full py-2 rounded text-white ${
-            isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+          className={`w-full py-2.5 text-sm ${
+            isLoading
+              ? "rounded-lg bg-slate-300 font-semibold text-slate-600"
+              : "primary-button"
           }`}
         >
           {isLoading ? "Signing in..." : "Sign in"}
@@ -177,7 +179,7 @@ const Login: React.FC = () => {
 
         <div className="text-sm text-center">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-blue-600">
+          <Link to="/signup" className="font-medium text-[#5f7f72]">
             Sign up
           </Link>
         </div>

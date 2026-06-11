@@ -62,7 +62,7 @@ export const AddList: React.FC<Props> = ({ boardId }) => {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-68 flex-shrink-0 rounded-xl border border-dashed border-blue-300 bg-blue-50/80 p-4 text-left text-sm font-semibold text-blue-700 transition hover:border-blue-500 hover:bg-white"
+        className="w-68 flex-shrink-0 rounded-xl border border-dashed border-slate-300 bg-white/40 p-4 text-left text-sm font-semibold text-slate-600 backdrop-blur transition hover:border-[#8aa79a] hover:bg-white/70"
         aria-label="Add list"
       >
         + Add a list

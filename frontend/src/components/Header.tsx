@@ -12,17 +12,17 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-10 border-b border-blue-200/70 bg-white/85 backdrop-blur">
+    <header className="sticky top-0 z-10 border-b border-white/60 bg-white/55 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <span className="brand-band flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold">
+          <span className="brand-band flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold">
             FT
           </span>
           <div>
-            <div className="text-base font-semibold text-slate-900">
+            <div className="text-base font-semibold text-slate-800">
               Fast Trello
             </div>
-            <div className="text-xs text-blue-600">Board workspace</div>
+            <div className="text-xs text-slate-500">Board workspace</div>
           </div>
         </Link>
 

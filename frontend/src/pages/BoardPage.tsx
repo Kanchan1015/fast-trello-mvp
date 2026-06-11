@@ -52,7 +52,7 @@ const BoardPage: React.FC = () => {
   if (boardLoading) {
     return (
       <div className="py-4">
-        <Link to="/dashboard" className="text-sm font-medium text-blue-600">
+        <Link to="/dashboard" className="text-sm font-medium text-[#5f7f72]">
           ← Back
         </Link>
         <div className="app-panel mt-6 rounded-xl p-5 text-slate-600">
@@ -65,7 +65,7 @@ const BoardPage: React.FC = () => {
   if (!board) {
     return (
       <div className="py-4">
-        <Link to="/dashboard" className="text-sm font-medium text-blue-600">
+        <Link to="/dashboard" className="text-sm font-medium text-[#5f7f72]">
           ← Back
         </Link>
         <div className="app-panel mt-6 rounded-xl p-5 text-red-600">
@@ -79,16 +79,16 @@ const BoardPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="brand-band rounded-xl p-5">
-        <Link to="/dashboard" className="text-sm font-medium text-blue-100">
+      <div className="quiet-panel rounded-xl p-5">
+        <Link to="/dashboard" className="text-sm font-medium text-[#5f7f72]">
           ← Back
         </Link>
 
-        <h1 className="mt-3 text-3xl font-semibold text-white" tabIndex={-1}>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-800" tabIndex={-1}>
           {board.name}
         </h1>
 
-        <div className="text-xs text-blue-100 mt-1">
+        <div className="text-xs text-slate-500 mt-1">
           Created:{" "}
           {board.createdAt ? format(new Date(board.createdAt), "PPP p") : "—"}
         </div>

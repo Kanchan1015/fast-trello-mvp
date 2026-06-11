@@ -51,8 +51,8 @@ const Dashboard: React.FC = () => {
     return (
       <section className="py-4">
         <div className="mb-6">
-          <p className="text-sm font-medium text-blue-600">Workspace</p>
-          <h1 className="text-3xl font-semibold text-slate-950">
+          <p className="text-sm font-medium text-slate-500">Workspace</p>
+          <h1 className="text-3xl font-semibold text-slate-800">
             Your boards
           </h1>
         </div>
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
     toast.error("Failed to load boards");
     return (
       <section className="py-4">
-        <h1 className="mb-4 text-3xl font-semibold text-slate-950">
+        <h1 className="mb-4 text-3xl font-semibold text-slate-800">
           Your boards
         </h1>
         <div className="app-panel rounded-xl p-5 text-red-600">
@@ -84,18 +84,18 @@ const Dashboard: React.FC = () => {
 
   return (
     <section className="py-4">
-      <div className="brand-band mb-8 grid gap-5 rounded-2xl p-6 lg:grid-cols-[1fr_26rem] lg:items-end">
+      <div className="quiet-panel mb-8 grid gap-5 rounded-2xl p-6 lg:grid-cols-[1fr_26rem] lg:items-end">
         <div>
-          <p className="text-sm font-medium text-blue-100">Workspace</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
+          <p className="text-sm font-medium text-slate-500">Workspace</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-800">
             Your boards
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-blue-50">
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
             Create boards for projects, then organize the work into lists.
           </p>
         </div>
 
-        <div className="rounded-xl bg-white/95 p-3 text-slate-900 shadow-sm">
+        <div className="rounded-xl border border-white/70 bg-white/55 p-3 text-slate-900 shadow-sm backdrop-blur">
           <CreateBoardForm
             onCreate={handleCreate}
             creating={createMutation.isPending}

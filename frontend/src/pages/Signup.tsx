@@ -83,7 +83,7 @@ const Signup: React.FC = () => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`mt-1 block w-full border rounded p-2 ${
+            className={`field mt-1 block w-full px-3 py-2.5 ${
               fieldErrors.name ? "border-red-500" : ""
             }`}
             placeholder="Your name"
@@ -99,7 +99,7 @@ const Signup: React.FC = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`mt-1 block w-full border rounded p-2 ${
+            className={`field mt-1 block w-full px-3 py-2.5 ${
               fieldErrors.email ? "border-red-500" : ""
             }`}
             placeholder="you@example.com"
@@ -115,7 +115,7 @@ const Signup: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`mt-1 block w-full border rounded p-2 ${
+            className={`field mt-1 block w-full px-3 py-2.5 ${
               fieldErrors.password ? "border-red-500" : ""
             }`}
             placeholder="At least 6 characters"
@@ -130,8 +130,10 @@ const Signup: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full py-2 rounded text-white ${
-            isLoading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+          className={`w-full py-2.5 text-sm ${
+            isLoading
+              ? "rounded-lg bg-slate-300 font-semibold text-slate-600"
+              : "primary-button"
           }`}
         >
           {isLoading ? "Creating..." : "Create account"}
@@ -148,7 +150,7 @@ const Signup: React.FC = () => {
 
         <div className="text-sm text-center">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-600">
+          <Link to="/login" className="font-medium text-[#5f7f72]">
             Log in
           </Link>
         </div>

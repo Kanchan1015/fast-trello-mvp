@@ -16,11 +16,11 @@ export const BoardCard: React.FC<Props> = ({ board, onDelete, deleting }) => {
     : "";
 
   return (
-    <div className="app-panel group flex min-h-36 flex-col justify-between rounded-xl p-4 transition hover:-translate-y-0.5 hover:shadow-xl">
+    <div className="app-panel group flex min-h-36 flex-col justify-between rounded-xl p-4 transition hover:-translate-y-0.5 hover:bg-white/78">
       <div>
         <Link to={`/boards/${board.id}`} className="block">
-          <div className="mb-4 h-2 w-16 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 transition group-hover:w-24" />
-          <h3 className="text-lg font-semibold text-slate-900">
+          <div className="mb-4 h-2 w-16 rounded-full bg-gradient-to-r from-[#f6b8c9] via-[#b9d7ff] to-[#cdeccf] transition group-hover:w-24" />
+          <h3 className="text-lg font-semibold text-slate-800">
             {board.name}
           </h3>
         </Link>
@@ -31,7 +31,7 @@ export const BoardCard: React.FC<Props> = ({ board, onDelete, deleting }) => {
       <div className="mt-5 flex items-center justify-between">
         <Link
           to={`/boards/${board.id}`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+          className="text-sm font-medium text-[#5f7f72] hover:text-[#506d61]"
         >
           Open board
         </Link>
