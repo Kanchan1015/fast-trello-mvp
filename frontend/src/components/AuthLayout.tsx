@@ -20,9 +20,6 @@ export const AuthLayout: React.FC<{
           </p>
         </div>
         {children}
-        <footer className="text-xs text-center text-slate-500 mt-6">
-          Fast Trello MVP - React frontend demo
-        </footer>
       </div>
     </div>
   );
