@@ -43,3 +43,7 @@ export function loginApi(payload: LoginPayload): Promise<AuthResponse> {
 export function logoutApi(): Promise<void> {
   return api.post("/api/auth/logout").then(() => undefined);
 }
+
+export function refreshApi(): Promise<AuthResponse> {
+  return api.post<AuthResponse>("/api/auth/refresh").then((r) => r.data);
+}

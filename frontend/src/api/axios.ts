@@ -17,10 +17,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let refreshRequest: Promise<unknown> | null = null;
+
 // Response interceptor: handle 401 centrally
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     // If the server didn't respond (network error), show a friendly toast
     if (!error.response) {
       // Avoid spamming toasts for repeated network failures
@@ -29,6 +31,27 @@ api.interceptors.response.use(
     }
 
     const status = error.response.status;
+    const originalRequest = error.config;
+
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest.url?.includes("/api/auth/refresh") &&
+      !originalRequest.url?.includes("/api/auth/login") &&
+      !originalRequest.url?.includes("/api/auth/register") &&
+      !(originalRequest as typeof originalRequest & { _retry?: boolean })._retry
+    ) {
+      (originalRequest as typeof originalRequest & { _retry?: boolean })._retry = true;
+      try {
+        refreshRequest ??= api.post("/api/auth/refresh");
+        await refreshRequest;
+        return api(originalRequest);
+      } catch {
+        // Fall through to centralized logout handling below.
+      } finally {
+        refreshRequest = null;
+      }
+    }
 
     if (status === 401) {
       // Notify any UI listeners (AuthProvider or other) about logout.
