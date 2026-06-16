@@ -1,6 +1,7 @@
 package com.trello.backend.list;
 
 import com.trello.backend.board.BoardService;
+import com.trello.backend.realtime.BoardEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,10 +24,12 @@ public class ListController {
 
     private final ListService listService;
     private final BoardService boardService;
+    private final BoardEventPublisher eventPublisher;
 
-    public ListController(ListService listService, BoardService boardService) {
+    public ListController(ListService listService, BoardService boardService, BoardEventPublisher eventPublisher) {
         this.listService = listService;
         this.boardService = boardService;
+        this.eventPublisher = eventPublisher;
     }
 
     /* ---------- Helpers ---------- */
@@ -55,6 +58,7 @@ public class ListController {
                 req.getTitle(),
                 req.getPosition()
         );
+        eventPublisher.publish(boardId, "LIST_CREATED", ListDto.fromEntity(created));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -100,7 +104,9 @@ public class ListController {
             updated = listService.updatePosition(id, boardId, req.getPosition());
         }
 
-        return ResponseEntity.ok(ListDto.fromEntity(updated));
+        ListDto dto = ListDto.fromEntity(updated);
+        eventPublisher.publish(boardId, "LIST_UPDATED", dto);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
@@ -111,6 +117,7 @@ public class ListController {
     ) {
         verifyBoardOwnership(boardId, auth);
         listService.deleteList(id, boardId);
+        eventPublisher.publish(boardId, "LIST_DELETED", java.util.Map.of("id", id));
         return ResponseEntity.noContent().build();
     }
 }

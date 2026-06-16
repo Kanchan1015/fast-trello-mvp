@@ -2,6 +2,7 @@ package com.trello.backend.board;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.trello.backend.boardmember.BoardMemberRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +21,11 @@ import java.util.UUID;
 public class BoardService {
 
     private final BoardRepository repo;
+    private final BoardMemberRepository memberRepository;
 
-    public BoardService(BoardRepository repo) {
+    public BoardService(BoardRepository repo, BoardMemberRepository memberRepository) {
         this.repo = repo;
+        this.memberRepository = memberRepository;
     }
 
     /**
@@ -39,7 +42,7 @@ public class BoardService {
      */
     @Transactional(readOnly = true)
     public List<Board> listBoards(UUID ownerId) {
-        return repo.findByOwnerId(ownerId);
+        return repo.findAccessibleByUserId(ownerId);
     }
 
     /**
@@ -48,8 +51,12 @@ public class BoardService {
      */
     @Transactional(readOnly = true)
     public Board getBoard(UUID boardId, UUID ownerId) {
-        return repo.findByIdAndOwnerId(boardId, ownerId)
-                .orElseThrow(BoardNotFoundException::new);
+        Board board = repo.findById(boardId).orElseThrow(BoardNotFoundException::new);
+        if (!board.getOwnerId().equals(ownerId)
+                && !memberRepository.existsByBoardIdAndUserId(boardId, ownerId)) {
+            throw new BoardNotFoundException();
+        }
+        return board;
     }
 
     /**

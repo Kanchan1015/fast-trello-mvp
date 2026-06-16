@@ -2,6 +2,9 @@ package com.trello.backend.auth;
 
 import com.trello.backend.auth.exception.AuthenticationFailedException;
 import com.trello.backend.auth.exception.EmailAlreadyExistsException;
+import com.trello.backend.board.BoardNotFoundException;
+import com.trello.backend.card.CardNotFoundException;
+import com.trello.backend.list.ListNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleAuthFailed(AuthenticationFailedException ex) {
         Map<String, String> body = Map.of("error", "invalid_credentials", "message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler({BoardNotFoundException.class, ListNotFoundException.class, CardNotFoundException.class})
+    public ResponseEntity<Object> handleNotFound(RuntimeException ex) {
+        Map<String, String> body = Map.of("error", "not_found", "message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
