@@ -1,7 +1,9 @@
 package com.trello.backend.config;
 
+import com.trello.backend.auth.AuthCookieService;
 import com.trello.backend.auth.jwt.JwtAuthenticationFilter;
 import com.trello.backend.auth.jwt.JwtService;
+import com.trello.backend.auth.ratelimit.AuthRateLimitingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -23,28 +25,45 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final AuthCookieService cookieService;
+    private final AuthRateLimitingFilter authRateLimitingFilter;
 
-    public SecurityConfig(JwtService jwtService) {
+    public SecurityConfig(
+            JwtService jwtService,
+            AuthCookieService cookieService,
+            AuthRateLimitingFilter authRateLimitingFilter
+    ) {
         this.jwtService = jwtService;
+        this.cookieService = cookieService;
+        this.authRateLimitingFilter = authRateLimitingFilter;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, cookieService);
 
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
+            .requiresChannel(channel -> channel.anyRequest().requiresSecure())
+            .headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .preload(true)
+                    .maxAgeInSeconds(31536000)
+                )
+            )
             // make the app stateless — JWT on every request
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // permit health and auth endpoints for anonymous access
-                .requestMatchers("/health", "/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .requestMatchers("/health", "/api/auth/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 // everything else requires authentication
                 .anyRequest().authenticated()
             );
 
         // ensure JWT filter runs before Spring's username/password filter
+        http.addFilterBefore(authRateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -64,7 +83,7 @@ public class SecurityConfig {
             "http://localhost:5173",
             "http://127.0.0.1:5173"
         )); // frontend dev
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
         cfg.setAllowCredentials(true);
 

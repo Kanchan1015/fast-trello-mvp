@@ -1,12 +1,23 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useDroppable } from "@dnd-kit/core";
 import toast from "react-hot-toast";
 
 import { patchList, deleteList, type ListItem } from "../api/lists";
+import { type CardItem as CardItemType } from "../api/cards";
+import { AddCard } from "./AddCard";
+import { CardItem } from "./CardItem";
 
 type Props = {
   list: ListItem;
   boardId: string;
+  cards: CardItemType[];
 };
 
 /**
@@ -14,12 +25,24 @@ type Props = {
  * - shows list title
  * - inline rename on click
  * - delete list
- * - cards will be added later
  */
-export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
+export const ListColumn: React.FC<Props> = ({ list, boardId, cards }) => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(list.title);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: list.id,
+    data: { type: "list", list },
+  });
+  const { setNodeRef: setCardDropRef, isOver } = useDroppable({
+    id: `list-drop-${list.id}`,
+    data: { type: "list-drop", listId: list.id },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   /* -------- Rename list -------- */
   const renameMutation = useMutation({
@@ -91,9 +114,23 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
   };
 
   return (
-    <div className="app-panel w-68 flex-shrink-0 rounded-xl border-t-4 border-t-[#cdeccf] p-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`app-panel w-68 flex-shrink-0 rounded-xl border-t-4 border-t-[#cdeccf] p-3 ${
+        isDragging ? "opacity-60" : ""
+      }`}
+      {...attributes}
+    >
       {/* Header */}
       <div className="mb-2 flex items-center justify-between gap-2">
+        <button
+          className="cursor-grab rounded px-1 text-slate-300 hover:bg-white/70 hover:text-slate-500"
+          aria-label="Drag list"
+          {...listeners}
+        >
+          ::
+        </button>
         {editing ? (
           <input
             value={title}
@@ -126,9 +163,26 @@ export const ListColumn: React.FC<Props> = ({ list, boardId }) => {
         </button>
       </div>
 
-      {/* Cards placeholder */}
-      <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-white/45 px-3 py-4 text-xs text-slate-500">
-        Cards coming next...
+      <div
+        ref={setCardDropRef}
+        className={`mt-4 min-h-24 rounded-lg border border-dashed px-2 py-2 ${
+          isOver ? "border-[#8aa79a] bg-white/70" : "border-slate-200 bg-white/35"
+        }`}
+      >
+        <SortableContext
+          items={cards.map((card) => card.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {cards.map((card) => (
+              <CardItem key={card.id} boardId={boardId} card={card} />
+            ))}
+          </div>
+        </SortableContext>
+        {cards.length === 0 && (
+          <div className="px-2 py-3 text-xs text-slate-400">Drop cards here</div>
+        )}
+        <AddCard boardId={boardId} listId={list.id} />
       </div>
     </div>
   );

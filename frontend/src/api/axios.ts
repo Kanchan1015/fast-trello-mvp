@@ -6,7 +6,6 @@
 // - adds the token to the api call every time
 
 import axios, { AxiosError } from "axios";
-import { getToken, clearToken } from "../utils/token";
 import toast from "react-hot-toast";
 
 // configure base URL from env, fallback to local backend
@@ -15,26 +14,15 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000, // 15s timeout
-  withCredentials: false, // set true if you use cookies later
+  withCredentials: true,
 });
 
-// Request interceptor: attach token if exists
-api.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token && config.headers) {
-      // ensure Authorization header is set for every outgoing request
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+let refreshRequest: Promise<unknown> | null = null;
 
 // Response interceptor: handle 401 centrally
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     // If the server didn't respond (network error), show a friendly toast
     if (!error.response) {
       // Avoid spamming toasts for repeated network failures
@@ -43,11 +31,29 @@ api.interceptors.response.use(
     }
 
     const status = error.response.status;
+    const originalRequest = error.config;
+
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest.url?.includes("/api/auth/refresh") &&
+      !originalRequest.url?.includes("/api/auth/login") &&
+      !originalRequest.url?.includes("/api/auth/register") &&
+      !(originalRequest as typeof originalRequest & { _retry?: boolean })._retry
+    ) {
+      (originalRequest as typeof originalRequest & { _retry?: boolean })._retry = true;
+      try {
+        refreshRequest ??= api.post("/api/auth/refresh");
+        await refreshRequest;
+        return api(originalRequest);
+      } catch {
+        // Fall through to centralized logout handling below.
+      } finally {
+        refreshRequest = null;
+      }
+    }
 
     if (status === 401) {
-      // Clear token centrally so app state is consistent
-      clearToken();
-
       // Notify any UI listeners (AuthProvider or other) about logout.
       // Listeners can do client-side cleanup, redirect, or show modals.
       try {

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { loginApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
-import { setToken } from "../utils/token";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 
@@ -18,6 +18,11 @@ const Login: React.FC = () => {
   const location = useLocation();
   const emailRef = useRef<HTMLInputElement | null>(null);
   const { signIn } = useAuth();
+  type AuthError = {
+    error?: string;
+    message?: string;
+    details?: Record<string, string>;
+  };
 
   useEffect(() => {
     emailRef.current?.focus();
@@ -25,16 +30,13 @@ const Login: React.FC = () => {
 
   const mutation = useMutation<
     AuthResponse,
-    any,
+    AxiosError<AuthError>,
     { email: string; password: string }
   >({
     mutationFn: (payload) => loginApi(payload),
     onSuccess: (data) => {
-      // persist token for axios interceptor
-      setToken(data.token);
-
       // update app-level auth state to avoid race with AuthProvider
-      signIn(data.token, data.user);
+      signIn(data.user);
 
       // show friendly toast
       try {
@@ -48,10 +50,12 @@ const Login: React.FC = () => {
       setFieldErrors({});
       setServerError(null);
 
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      const from =
+        (location.state as { from?: { pathname?: string } } | null)?.from
+          ?.pathname || "/dashboard";
       navigate(from, { replace: true });
     },
-    onError: (err: any) => {
+    onError: (err) => {
       const resp = err?.response?.data;
       if (!resp) {
         const msg = "Login failed. Try again.";
@@ -171,8 +175,8 @@ const Login: React.FC = () => {
         {(isError || serverError) && (
           <div role="alert" className="text-sm text-red-600 mt-2 text-center">
             {serverError ??
-              (mutation.error as any)?.response?.data?.message ??
-              (mutation.error as any)?.response?.data?.error ??
+              mutation.error?.response?.data?.message ??
+              mutation.error?.response?.data?.error ??
               "Login failed"}
           </div>
         )}

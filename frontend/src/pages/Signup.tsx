@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { registerApi } from "../api/auth";
 import type { AuthResponse } from "../api/auth";
 import { AuthLayout } from "../components/AuthLayout";
-import { setToken } from "../utils/token";
 import { useAuth } from "../context/AuthContext";
 
 const Signup: React.FC = () => {
@@ -18,6 +18,11 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
   const nameRef = useRef<HTMLInputElement | null>(null);
   const { signIn } = useAuth();
+  type AuthError = {
+    error?: string;
+    message?: string;
+    details?: Record<string, string>;
+  };
 
   useEffect(() => {
     nameRef.current?.focus();
@@ -25,18 +30,17 @@ const Signup: React.FC = () => {
 
   const mutation = useMutation<
     AuthResponse,
-    any,
+    AxiosError<AuthError>,
     { name: string; email: string; password: string }
   >({
     mutationFn: (payload) => registerApi(payload),
     onSuccess: (data) => {
-      setToken(data.token);
-      signIn(data.token, data.user);
+      signIn(data.user);
       setFieldErrors({});
       setServerError(null);
       navigate("/dashboard");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       const resp = err?.response?.data;
       if (!resp) {
         setServerError("Signup failed. Try again.");
@@ -142,8 +146,8 @@ const Signup: React.FC = () => {
         {(isError || serverError) && (
           <div className="text-sm text-red-600 mt-2 text-center">
             {serverError ??
-              (mutation.error as any)?.response?.data?.message ??
-              (mutation.error as any)?.response?.data?.error ??
+              mutation.error?.response?.data?.message ??
+              mutation.error?.response?.data?.error ??
               "Signup failed"}
           </div>
         )}
