@@ -85,6 +85,11 @@ public class ListController {
     ) {
         verifyBoardOwnership(boardId, auth);
 
+        if (req == null || (req.getTitle() == null && req.getPosition() == null)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "At least one of title or position must be provided");
+        }
+
         ListEntity updated = null;
 
         if (req.getTitle() != null) {
