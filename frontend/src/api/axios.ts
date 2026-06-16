@@ -6,7 +6,6 @@
 // - adds the token to the api call every time
 
 import axios, { AxiosError } from "axios";
-import { getToken, clearToken } from "../utils/token";
 import toast from "react-hot-toast";
 
 // configure base URL from env, fallback to local backend
@@ -15,21 +14,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000, // 15s timeout
-  withCredentials: false, // set true if you use cookies later
+  withCredentials: true,
 });
-
-// Request interceptor: attach token if exists
-api.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token && config.headers) {
-      // ensure Authorization header is set for every outgoing request
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 // Response interceptor: handle 401 centrally
 api.interceptors.response.use(
@@ -45,9 +31,6 @@ api.interceptors.response.use(
     const status = error.response.status;
 
     if (status === 401) {
-      // Clear token centrally so app state is consistent
-      clearToken();
-
       // Notify any UI listeners (AuthProvider or other) about logout.
       // Listeners can do client-side cleanup, redirect, or show modals.
       try {

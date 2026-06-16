@@ -1,5 +1,6 @@
 package com.trello.backend.auth.jwt;
 
+import com.trello.backend.auth.AuthCookieService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +17,11 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final AuthCookieService cookieService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, AuthCookieService cookieService) {
         this.jwtService = jwtService;
+        this.cookieService = cookieService;
     }
 
     @Override
@@ -26,12 +29,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-        if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
+        String token = null;
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else {
+            token = cookieService.accessToken(request).orElse(null);
+        }
+
+        if (!StringUtils.hasText(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = header.substring(7);
         try {
             String subject = jwtService.validateAndGetSubject(token);
             if (subject != null) {

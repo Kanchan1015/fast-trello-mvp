@@ -37,11 +37,21 @@ public class WebSocketSecurityInterceptor implements ChannelInterceptor {
 
     private UUID userIdFromToken(StompHeaderAccessor accessor) {
         String header = accessor.getFirstNativeHeader("Authorization");
-        if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
+        String token = null;
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else if (accessor.getSessionAttributes() != null) {
+            Object tokenAttribute = accessor.getSessionAttributes()
+                    .get(AuthCookieHandshakeInterceptor.ACCESS_TOKEN_ATTRIBUTE);
+            if (tokenAttribute instanceof String value) {
+                token = value;
+            }
+        }
+        if (!StringUtils.hasText(token)) {
             throw new MessagingException("Missing websocket token");
         }
         try {
-            return UUID.fromString(jwtService.validateAndGetSubject(header.substring(7)));
+            return UUID.fromString(jwtService.validateAndGetSubject(token));
         } catch (JwtException | IllegalArgumentException ex) {
             throw new MessagingException("Invalid websocket token", ex);
         }

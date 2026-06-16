@@ -48,8 +48,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = jwtService.generateToken(id.toString());
-        return new AuthResponse(token, com.trello.backend.auth.dto.UserDto.fromEntity(user));
+        return new AuthResponse(com.trello.backend.auth.dto.UserDto.fromEntity(user));
     }
 
     // Authenticate (login)
@@ -64,8 +63,7 @@ public class AuthService {
             throw new AuthenticationFailedException();
         }
 
-        String token = jwtService.generateToken(user.getId().toString());
-        return new AuthResponse(token, com.trello.backend.auth.dto.UserDto.fromEntity(user));
+        return new AuthResponse(com.trello.backend.auth.dto.UserDto.fromEntity(user));
     }
 
     // Get current user from Spring Security context (assumes subject == userId)

@@ -23,7 +23,6 @@ export type AuthUser = {
 };
 
 export type AuthResponse = {
-  token: string;
   user: AuthUser;
 };
 
@@ -39,4 +38,8 @@ export function registerApi(payload: RegisterPayload): Promise<AuthResponse> {
 // Login → returns { token, user }
 export function loginApi(payload: LoginPayload): Promise<AuthResponse> {
   return api.post<AuthResponse>("/api/auth/login", payload).then((r) => r.data);
+}
+
+export function logoutApi(): Promise<void> {
+  return api.post("/api/auth/logout").then(() => undefined);
 }

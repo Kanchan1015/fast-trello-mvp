@@ -1,4 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -7,7 +9,7 @@ import React, {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axios";
-import { getToken, clearToken, setToken } from "../utils/token";
+import { logoutApi } from "../api/auth";
 
 /* Toggle debug logs during troubleshooting */
 const DEBUG_AUTH = false;
@@ -25,9 +27,9 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   loading: boolean;
   /* expose both names for compatibility */
-  signIn: (token: string, user: User) => void;
+  signIn: (user: User) => void;
   signOut: (redirect?: boolean) => void;
-  login: (token: string, user: User) => void;
+  login: (user: User) => void;
   logout: (redirect?: boolean) => void;
 };
 
@@ -39,10 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const qc = useQueryClient();
-  const [user, setUser] = useState<User>(null);
-  const [restoring, setRestoring] = useState<boolean>(true);
-
-  const token = getToken();
+  const [sessionUser, setSessionUser] = useState<User>(null);
 
   const query = useQuery({
     queryKey: ["me"],
@@ -50,66 +49,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const resp = await api.get("/api/auth/me");
       return resp.data as User;
     },
-    enabled: !!token,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (!token) {
-      setRestoring(false);
-      return;
-    }
-    if (query.isFetched || query.isError) {
-      setRestoring(false);
-    }
-  }, [token, query.isFetched, query.isError]);
+  const user = sessionUser ?? (query.isSuccess ? query.data : null);
 
   useEffect(() => {
-    if (query.isSuccess) {
-      if (DEBUG_AUTH) console.debug("[auth] /me success", query.data);
-      setUser(query.data);
-      qc.setQueryData(["me"], query.data);
-    }
-  }, [qc, query.data, query.isSuccess]);
-
-  useEffect(() => {
-    if (query.isError) {
-      if (DEBUG_AUTH) console.debug("[auth] /me error", query.error);
-      clearToken();
-      setUser(null);
+    const handleLogout = () => {
+      setSessionUser(null);
       qc.removeQueries({ queryKey: ["me"] });
-    }
-  }, [qc, query.error, query.isError]);
+    };
+
+    window.addEventListener("auth:logout", handleLogout);
+    return () => window.removeEventListener("auth:logout", handleLogout);
+  }, [qc]);
 
   /* Core set-state helper used by both names */
-  const doSignIn = (tokenValue: string, u: User) => {
-    if (DEBUG_AUTH) console.debug("[auth] signIn", { tokenValue, user: u });
-    setToken(tokenValue); // persistent storage
-    setUser(u); // context state
+  const doSignIn = useCallback((u: User) => {
+    if (DEBUG_AUTH) console.debug("[auth] signIn", { user: u });
+    setSessionUser(u); // context state
     qc.setQueryData(["me"], u); // seed react-query cache (prevents race)
-  };
+  }, [qc]);
 
-  const doSignOut = (redirect = false) => {
+  const doSignOut = useCallback((redirect = false) => {
     if (DEBUG_AUTH) console.debug("[auth] signOut", { redirect });
-    clearToken();
-    setUser(null);
+    logoutApi().catch(() => undefined);
+    setSessionUser(null);
     qc.removeQueries({ queryKey: ["me"] });
     if (redirect) window.location.href = "/login";
-  };
+  }, [qc]);
 
   /* Expose both names so older code calling signIn/signOut still works */
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: !!user,
-      loading: restoring || query.isFetching,
+      loading: !sessionUser && query.isLoading,
       signIn: doSignIn,
       signOut: doSignOut,
       login: doSignIn,
       logout: doSignOut,
     }),
-    [user, restoring, query.isFetching]
+    [user, sessionUser, query.isLoading, doSignIn, doSignOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

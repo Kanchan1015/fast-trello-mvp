@@ -12,9 +12,14 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketSecurityInterceptor securityInterceptor;
+    private final AuthCookieHandshakeInterceptor handshakeInterceptor;
 
-    public WebSocketConfig(WebSocketSecurityInterceptor securityInterceptor) {
+    public WebSocketConfig(
+            WebSocketSecurityInterceptor securityInterceptor,
+            AuthCookieHandshakeInterceptor handshakeInterceptor
+    ) {
         this.securityInterceptor = securityInterceptor;
+        this.handshakeInterceptor = handshakeInterceptor;
     }
 
     @Override
@@ -27,6 +32,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("http://localhost:5173", "http://127.0.0.1:5173")
+                .addInterceptors(handshakeInterceptor)
                 .withSockJS();
     }
 

@@ -1,5 +1,6 @@
 package com.trello.backend.config;
 
+import com.trello.backend.auth.AuthCookieService;
 import com.trello.backend.auth.jwt.JwtAuthenticationFilter;
 import com.trello.backend.auth.jwt.JwtService;
 import org.springframework.context.annotation.Bean;
@@ -23,14 +24,16 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final AuthCookieService cookieService;
 
-    public SecurityConfig(JwtService jwtService) {
+    public SecurityConfig(JwtService jwtService, AuthCookieService cookieService) {
         this.jwtService = jwtService;
+        this.cookieService = cookieService;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, cookieService);
 
         http
             .csrf(csrf -> csrf.disable())
