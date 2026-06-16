@@ -9,7 +9,7 @@ Designed with clean architecture and minimal, well-structured features.
 
 ### **Frontend**
 
-![React](https://img.shields.io/badge/React-18-blue?logo=react)
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-fast-purple?logo=vite)
 ![React Query](https://img.shields.io/badge/React_Query-Server_State-red?logo=reactquery)
@@ -94,20 +94,22 @@ Below is everything implemented so far in the project.
 - Flyway migrations implemented:
 
   **`V1__init.sql`**
-  Creates:
+  Creates tables: `users`, `boards`, `lists`, `cards`
 
-  - `users`
-  - **`boards`**
-  - `lists`
-  - `cards`
+  **`V2__add_table.sql`**
+  Creates table: `stuffs`
 
   **`V3__create_boards.sql`**
-  Ensures board schema is correct:
+  Ensures board schema is correct.
 
-  - `id`
-  - `name`
-  - `owner_id`
-  - `created_at`
+  **`V4__create_lists.sql`**
+  Ensures list schema is correct (specifies position as DOUBLE PRECISION).
+
+  **`V5__fix_lists_remove_name.sql`**
+  Drops the obsolete `name` column from the `lists` table.
+
+  **`V6__repair_lists_schema.sql`**
+  Ensures `title` column is added and `position` column type is altered for instances created via `V1`.
 
 - Flyway verified through logs & Neon console
 
@@ -383,6 +385,21 @@ Implemented `BoardPage`:
 
 ---
 
+## **23. Lists CRUD System**
+
+Fully implemented List CRUD functionality across backend and frontend:
+- **Backend**:
+  - Entity & DTO mappings for List.
+  - Transactional CRUD logic in `ListService` including optimistic double-precision insertion spacing and automatic re-indexing (compaction) on convergence.
+  - Security check integration scoping lists to parent board ownership.
+- **Frontend**:
+  - API integrations in `src/api/lists.ts`.
+  - Scrollable columns rendering lists in `BoardPage`.
+  - Optimistic UI updates for adding lists, list deletions, and title renames.
+  - Accessibiliy-polish for lists management.
+
+---
+
 # Architecture Overview
 
 ```
@@ -419,9 +436,9 @@ fast-trello-mvp/
 
 ### **Backend**
 
-```
-set -o allexport; source .env.backend; set +o allexport
+```bash
 cd backend
+set -o allexport; source .env.backend; set +o allexport
 ./mvnw spring-boot:run
 ```
 
@@ -443,15 +460,12 @@ npm run dev
 
 # Roadmap (Upcoming)
 
-### **Next: Lists & Cards System**
+### **Next: Cards System & Enhancements**
 
-- Flyway migration for `lists` & `cards`
-- JPA models, repos, services
-- List CRUD
-- Card CRUD
-- Drag & Drop with `@dnd-kit`
+- Card CRUD (JPA entities, services, controllers, and APIs)
+- Drag & Drop cards/lists using `@dnd-kit`
 - Real-time sync (WebSockets)
-- Board page full UX
+- Full card management UI modal
 
 ---
 
