@@ -3,6 +3,7 @@ package com.trello.backend.config;
 import com.trello.backend.auth.AuthCookieService;
 import com.trello.backend.auth.jwt.JwtAuthenticationFilter;
 import com.trello.backend.auth.jwt.JwtService;
+import com.trello.backend.auth.ratelimit.AuthRateLimitingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -25,10 +26,16 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final AuthCookieService cookieService;
+    private final AuthRateLimitingFilter authRateLimitingFilter;
 
-    public SecurityConfig(JwtService jwtService, AuthCookieService cookieService) {
+    public SecurityConfig(
+            JwtService jwtService,
+            AuthCookieService cookieService,
+            AuthRateLimitingFilter authRateLimitingFilter
+    ) {
         this.jwtService = jwtService;
         this.cookieService = cookieService;
+        this.authRateLimitingFilter = authRateLimitingFilter;
     }
 
     @Bean
@@ -48,6 +55,7 @@ public class SecurityConfig {
             );
 
         // ensure JWT filter runs before Spring's username/password filter
+        http.addFilterBefore(authRateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
