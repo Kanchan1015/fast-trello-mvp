@@ -5,6 +5,24 @@ Designed with clean architecture and minimal, well-structured features.
 
 ---
 
+# Project Overview
+
+Fast Trello MVP is a collaborative task-board application inspired by Trello. Users can sign up, log in, create boards, invite collaborators, organize work into lists, and manage cards inside those lists. Lists and cards can be reordered with drag-and-drop, and board changes are synchronized in realtime so multiple people viewing the same board stay up to date.
+
+The project demonstrates several full-stack concepts in one compact codebase:
+
+- Secure authentication with short-lived access JWTs in HttpOnly cookies and rotating refresh tokens stored as database hashes.
+- Role-style board access where boards can be owned by one user and shared with collaborators.
+- Ordered data modeling using floating-point `position` values for lists and cards, with compaction when spacing gets too tight.
+- Optimistic frontend updates with React Query for fast interactions and rollback on failure.
+- Realtime synchronization using Spring WebSocket/STOMP/SockJS on the backend and a STOMP client on the frontend.
+- Database evolution through Flyway migrations instead of ad hoc schema changes.
+- Security hardening with auth rate limiting, HTTPS/HSTS, and encrypted PostgreSQL connection validation.
+
+What is significant here is that this is not only a CRUD demo. It connects authentication, authorization, realtime collaboration, drag-and-drop ordering, database migrations, and production-oriented security practices into a working MVP structure.
+
+---
+
 # Tech Stack
 
 ### **Frontend**
